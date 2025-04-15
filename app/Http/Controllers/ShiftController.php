@@ -19,6 +19,11 @@ class ShiftController extends Controller
         return view('shifts.index', compact('shifts'));  // ビューに渡す
     }
 
+    public function calendar()
+    {
+        return view('shifts.calendar');
+    }
+
     // シフトデータをJSON形式で返す
     public function events()
     {
@@ -37,4 +42,5 @@ class ShiftController extends Controller
 
         return response()->json($events);
     }
+    
 }

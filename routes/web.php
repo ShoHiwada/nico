@@ -23,7 +23,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/shifts/events', [ShiftController::class, 'events'])->name('shifts.events');
 });
 
-
-
-
 require __DIR__.'/auth.php';

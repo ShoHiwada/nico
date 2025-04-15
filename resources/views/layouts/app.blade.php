@@ -30,5 +30,8 @@
                 @yield('content')
             </main>
         </div>
+
+        <!-- スクリプトの追加場所 -->
+        @stack('scripts')
     </body>
 </html>
