@@ -21,6 +21,14 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
     Route::get('/shifts/events', [ShiftController::class, 'events'])->name('shifts.events');
+    Route::get('/shifts/create', [ShiftController::class, 'create'])->name('shifts.create')->middleware('checkAdmin');
 });
+
+Route::middleware(['auth', 'checkAdmin'])->group(function () {
+    Route::get('/admin', function () {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
+});
+
 
 require __DIR__.'/auth.php';

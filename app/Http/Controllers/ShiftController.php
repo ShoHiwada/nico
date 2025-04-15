@@ -24,6 +24,16 @@ class ShiftController extends Controller
         return view('shifts.calendar');
     }
 
+    public function create()
+{
+    if (!Auth::user()->isAdmin()) {
+        abort(403, '管理者専用ページです。');
+    }
+
+    // シフト作成ビューを表示
+    return view('shifts.create');
+}
+
     // シフトデータをJSON形式で返す
     public function events()
     {
