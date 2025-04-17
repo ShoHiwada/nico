@@ -1,41 +1,54 @@
-<x-app-layout>
+@extends('layouts.app')
+
     @section('content')
-    <!-- カレンダー表示 -->
     <div class="p-4">
         <div id="calendar"></div>
     </div>
     @endsection
-<!-- FullCalendar CDN読み込み -->
-@push('style')
+
+    @push('style')
         <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/main.min.css" rel="stylesheet" />
-        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
-@endpush
+    @endpush
+
     @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var calendarEl = document.getElementById('calendar');
-                if (calendarEl) {
-                    var calendar = new FullCalendar.Calendar(calendarEl, {
-                    initialView: 'dayGridMonth',
-                    locale: 'ja',
-                    height: 'auto',
-                    firstDay: 1,
-                    headerToolbar: {
-                        left: "dayGridMonth,listMonth",
-                        center: "title",
-                        right: "today prev,next"
-                    },
-                    buttonText: {
-                        today: '今月',
-                        month: '月',
-                        list: 'リスト'
-                    },
-                    noEventsContent: 'スケジュールはありません',
-                    events: "{{ route('shifts.events') }}", // イベントのURLを指定
-                });
-                    calendar.render();
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'ja',
+                height: 'auto',
+                firstDay: 1,
+                headerToolbar: {
+                    left: "dayGridMonth,listMonth",
+                    center: "title",
+                    right: "today prev,next"
+                },
+                buttonText: {
+                    today: '今月',
+                    month: '月',
+                    list: 'リスト'
+                },
+                noEventsContent: 'スケジュールはありません',
+
+                // 🔥 イベント読み込みを関数にする
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    fetch("{{ route('shifts.events') }}")
+                        .then(response => response.json())
+                        .then(data => {
+                            successCallback(data);
+                        })
+                        .catch(error => {
+                            console.error("Error loading events:", error);
+                            failureCallback(error);
+                        });
                 }
             });
-        </script>
-    @endpush
-</x-app-layout>
+            calendar.render();
+        }
+    });
+</script>
+
+@endpush

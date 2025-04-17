@@ -9,37 +9,30 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
+// 一般ユーザー向けダッシュボード
+Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+// 一般ユーザー：プロフィール操作
+Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// 一般ユーザー：シフト閲覧・申請
 Route::middleware(['auth'])->group(function () {
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
     Route::get('/shifts/events', [ShiftController::class, 'events'])->name('shifts.events');
     Route::get('/shifts/create', [ShiftController::class, 'create'])->name('shifts.create')->middleware('checkAdmin');
 });
 
-Route::middleware(['auth', 'checkAdmin'])->group(function () {
-    Route::get('/admin', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
-});
-
-Route::middleware(['auth', 'checkAdmin'])->group(function () {
-    Route::get('/admin/shifts', [ShiftController::class, 'adminIndex'])->name('admin.shifts.index');
-    Route::post('/admin/shifts', [ShiftController::class, 'adminStore'])->name('admin.shifts.store');
-});
-
-Route::prefix('admin')->name('admin.')->group(function () {
+// 管理者ページ全体
+Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', fn () => view('admin.dashboard'))->name('dashboard');
     Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
 });
-
 
 require __DIR__.'/auth.php';
