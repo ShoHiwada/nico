@@ -20,6 +20,11 @@
         <x-nav-link href="{{ route('admin.dashboard') }}" :active="request()->routeIs('admin.dashboard')">
             管理者ページ
         </x-nav-link>
+        <!-- すでにあるナビメニューの中にこれを追加 -->
+        <x-nav-link :href="route('admin.shifts.index')" :active="request()->routeIs('admin.shifts.index')">
+            シフト管理
+        </x-nav-link>
+
     @endif
 @endauth
 

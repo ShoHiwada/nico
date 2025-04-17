@@ -58,31 +58,39 @@
         const allEvents = @json($shifts);
 
         const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'ja',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,listWeek'
-            },
-            views: {
-                dayGridMonth: { buttonText: 'カレンダー' },
-                listWeek: { buttonText: '表形式' }
-            },
-            events: function(fetchInfo, successCallback, failureCallback) {
-                const selectedUserId = userFilter.value;
-                let filtered = allEvents;
+    initialView: 'dayGridMonth',
+    locale: 'ja',
+    headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,listWeek,listMonth'
+    },
+    views: {
+        dayGridMonth: {
+            buttonText: 'カレンダー',
+        },
+        listWeek: {
+            buttonText: '表（週）',
+        },
+        listMonth: {
+            buttonText: '表（月）',
+        }
+    },
+    events: function(fetchInfo, successCallback, failureCallback) {
+        const selectedUserId = userFilter.value;
+        let filtered = allEvents;
 
-                if (selectedUserId !== 'all') {
-                    filtered = allEvents.filter(e => e.user_id == selectedUserId);
-                }
+        if (selectedUserId !== 'all') {
+            filtered = allEvents.filter(e => e.user_id == selectedUserId);
+        }
 
-                successCallback(filtered);
-            },
-            dateClick: function(info) {
-                dateInput.value = info.dateStr;
-            }
-        });
+        successCallback(filtered);
+    },
+    dateClick: function(info) {
+        dateInput.value = info.dateStr;
+    }
+});
+
 
         calendar.render();
 

@@ -30,8 +30,11 @@
             @endisset
             <!-- Page Content -->
             <main>
-                @yield('content')
+                <div class="max-w-5xl mx-auto px-4 py-6">
+                    @yield('content')
+                </div>
             </main>
+            </div>
         </div>
 
         <!-- スクリプトの追加場所 -->
