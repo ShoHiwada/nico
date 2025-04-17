@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\Admin\AdminShiftController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -28,6 +29,16 @@ Route::middleware(['auth', 'checkAdmin'])->group(function () {
     Route::get('/admin', function () {
         return view('admin.dashboard');
     })->name('admin.dashboard');
+});
+
+Route::middleware(['auth', 'checkAdmin'])->group(function () {
+    Route::get('/admin/shifts', [ShiftController::class, 'adminIndex'])->name('admin.shifts.index');
+    Route::post('/admin/shifts', [ShiftController::class, 'adminStore'])->name('admin.shifts.store');
+});
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
+    Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
 });
 
 

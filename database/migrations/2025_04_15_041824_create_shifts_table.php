@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->date('date');
-            $table->enum('type', ['日勤', '夜勤', '休']);
+            $table->enum('type', ['日勤', '遅番', '夜勤']);
             $table->timestamps();
     
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

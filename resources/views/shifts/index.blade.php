@@ -5,11 +5,12 @@
         <div id="calendar"></div>
     </div>
     @endsection
- <!-- FullCalendar CDN読み込み -->
- @push('scripts')
+<!-- FullCalendar CDN読み込み -->
+@push('style')
         <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/main.min.css" rel="stylesheet" />
         <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
-
+@endpush
+    @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var calendarEl = document.getElementById('calendar');
@@ -36,5 +37,5 @@
                 }
             });
         </script>
-    @endpushï
+    @endpush
 </x-app-layout>
