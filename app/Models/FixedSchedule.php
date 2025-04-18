@@ -4,12 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Shift extends Model
+class FixedSchedule extends Model
 {
-    //
-    protected $fillable = ['user_id', 'building', 'date', 'type'];
-
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -17,9 +13,5 @@ class Shift extends Model
     public function shiftType()
     {
         return $this->belongsTo(ShiftType::class);
-    }
-    public function logs()
-    {
-        return $this->hasMany(ShiftLog::class);
     }
 }

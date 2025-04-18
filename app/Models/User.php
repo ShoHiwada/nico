@@ -52,7 +52,43 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_admin' => 'boolean', 
+            'is_admin' => 'boolean',
         ];
+    }
+    public function position()
+    {
+        return $this->belongsTo(Position::class);
+    }
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+    public function shifts()
+    {
+        return $this->hasMany(Shift::class);
+    }
+    public function fixedSchedules()
+    {
+        return $this->hasMany(FixedSchedule::class);
+    }
+    public function shiftRequests()
+    {
+        return $this->hasMany(ShiftRequest::class);
+    }
+    public function actualRecords()
+    {
+        return $this->hasMany(ActualRecord::class);
+    }
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+    public function adminLogs()
+    {
+        return $this->hasMany(AdminLog::class, 'admin_user_id');
     }
 }
