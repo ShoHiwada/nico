@@ -31,15 +31,25 @@ class AdminShiftController extends Controller
             'user_id' => 'required|exists:users,id',
             'date' => 'required|date',
             'type' => 'required|in:day,night',
+            'building' => [
+                'nullable',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->type === 'night' && empty($value)) {
+                        $fail('夜勤の場合、建物の指定が必要です。');
+                    }
+                },
+            ],
         ]);
     
         Shift::create([
             'user_id' => $request->user_id,
             'date' => $request->date,
             'type' => $request->type,
+            'building' => $request->building,
         ]);
     
         return redirect()->route('admin.shifts.index')->with('success', 'シフトを登録しました');
     }
+    
     
 }

@@ -9,17 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+    // （部署）
     public function up(): void
     {
-        Schema::create('shifts', function (Blueprint $table) {
+        Schema::create('departments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->date('date');
-            $table->enum('type', ['日勤', '遅番', '夜勤']);
+            $table->string('name');
+            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-    
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });
+        });        
     }
 
     /**
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('shifts');
+        Schema::dropIfExists('departments');
     }
 };

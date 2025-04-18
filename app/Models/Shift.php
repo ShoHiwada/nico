@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Shift extends Model
 {
     //
-    protected $fillable = ['user_id', 'date', 'type'];
+    protected $fillable = ['user_id', 'building', 'date', 'type'];
+
 
     public function user()
     {

@@ -38,6 +38,17 @@
                 <option value="night">夜勤</option>
             </select>
         </div>
+        <div class="mb-2" id="building-field">
+            <label>建物</label>
+            <select name="building" class="form-select">
+                <option value="">選択してください</option>
+                <option value=1>アーバンスカイ</option>
+                <option value=2>パウぜ福大前</option>
+                <option value=3>CSハイツ</option>
+                <option value=4>ローレル片方</option>
+                <option value=5>マルワコーポ福大前</option>
+            </select>
+        </div>
         <button type="submit" class="btn btn-primary mt-2">Submit</button>
     </form>
 </div>

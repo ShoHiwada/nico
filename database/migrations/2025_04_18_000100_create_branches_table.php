@@ -9,18 +9,21 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
+    // （支店）
     public function up(): void
     {
-        Schema::table('shifts', function (Blueprint $table) {
-            $table->string('type')->nullable()->change();
-        });
+        Schema::create('branches', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });        
     }
-    
+
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::table('shifts', function (Blueprint $table) {
-            $table->string('type')->nullable(false)->change();
-        });
+        Schema::dropIfExists('branches');
     }
-    
 };
