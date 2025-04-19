@@ -1,0 +1,48 @@
+/* components/table.css */
+
+/* すべてのテーブル共通で横スク出したいとき */
+#users-table {
+    min-width: 1000px;
+    table-layout: auto;
+}
+
+/* クラスごとの幅設定 */
+.col-id {
+    width: 60px;
+}
+
+.col-name {
+    min-width: 150px;
+}
+
+.col-email {
+    min-width: 200px;
+    white-space: nowrap;
+}
+
+.col-branch,
+.col-dept,
+.col-position {
+    min-width: 140px;
+}
+
+.col-admin,
+.col-retired {
+    min-width: 100px;
+    text-align: center;
+}
+
+/* 退職者行を薄いグレーで表示 */
+.retired-row {
+    background-color: #f0f0f0;
+    color: #666;
+}
+
+
+
+/* テーブルページネーション */
+.dataTables_paginate ul.pagination {
+    display: flex !important;
+    justify-content: center;
+    gap: 5px;
+}
