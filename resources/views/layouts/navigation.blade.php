@@ -16,17 +16,19 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     @auth
-    @if(auth()->user()->is_admin)
-        <x-nav-link href="{{ route('admin.dashboard') }}" :active="request()->routeIs('admin.dashboard')">
-            管理者ページ
-        </x-nav-link>
-        <!-- すでにあるナビメニューの中にこれを追加 -->
-        <x-nav-link :href="route('admin.shifts.index')" :active="request()->routeIs('admin.shifts.index')">
-            シフト管理
-        </x-nav-link>
-
-    @endif
-@endauth
+                    @if(auth()->user()->is_admin)
+                    <x-nav-link href="{{ route('admin.dashboard') }}" :active="request()->routeIs('admin.dashboard')">
+                        管理者ページ
+                    </x-nav-link>
+                    <!-- すでにあるナビメニューの中にこれを追加 -->
+                    <x-nav-link :href="route('admin.shifts.index')" :active="request()->routeIs('admin.shifts.index')">
+                        シフト管理
+                    </x-nav-link>
+                    <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('users.index')">
+                        職員一覧
+                    </x-nav-link>
+                    @endif
+                    @endauth
 
                 </div>
             </div>
@@ -56,7 +58,7 @@
                             @csrf
 
                             <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
+                                onclick="event.preventDefault();
                                                 this.closest('form').submit();">
                                 {{ __('Log Out') }}
                             </x-dropdown-link>
@@ -102,7 +104,7 @@
                     @csrf
 
                     <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
+                        onclick="event.preventDefault();
                                         this.closest('form').submit();">
                         {{ __('Log Out') }}
                     </x-responsive-nav-link>

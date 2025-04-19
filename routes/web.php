@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\Admin\AdminShiftController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,8 +32,15 @@ Route::middleware(['auth'])->group(function () {
 // 管理者ページ全体
 Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', fn () => view('admin.dashboard'))->name('dashboard');
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
 });
+
+// 管理者用社員一覧ページ
+// Route::middleware(['auth', 'is_admin'])->group(function () {
+//     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+// });
+
 
 require __DIR__.'/auth.php';
