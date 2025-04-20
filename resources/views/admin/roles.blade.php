@@ -1,0 +1,7 @@
+@extends('layouts.app')
+
+@section('content')
+    <div class="py-6">
+        <p class="text-gray-600 dark:text-gray-400">権限管理 作成予定</p>
+    </div>
+@endsection

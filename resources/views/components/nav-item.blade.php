@@ -4,12 +4,10 @@
    class="group flex items-center py-2 px-{{ $indent ? '6' : '4' }} rounded transition
           {{ $active ? 'bg-gray-200 font-bold dark:bg-gray-800' : 'hover:bg-gray-100 dark:hover:bg-gray-800' }}">
     
-    {{-- SVGアイコン --}}
-    <div class="w-10 h-10 flex items-center justify-center text-gray-600 dark:text-gray-300">
-        {!! $icon !!}
+    <div class="w-10 h-10 flex items-center justify-center text-xl leading-none">
+        <span class="block">{{ $icon }}</span>
     </div>
 
-    {{-- ラベル（展開時） --}}
     <span x-show="expanded" x-transition class="ml-2 whitespace-nowrap">
         {{ $label }}
     </span>
