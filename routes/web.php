@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Admin\AdminShiftController;
 use Illuminate\Support\Facades\Route;
 
+// トップページ
 Route::get('/', function () {
     return view('welcome');
 });
@@ -22,25 +23,31 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// 一般ユーザー：シフト閲覧・申請
+// 一般ユーザー：職員用ページ
 Route::middleware(['auth'])->group(function () {
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
     Route::get('/shifts/events', [ShiftController::class, 'events'])->name('shifts.events');
-    Route::get('/shifts/create', [ShiftController::class, 'create'])->name('shifts.create')->middleware('checkAdmin');
+    Route::get('/shift-request', fn () => view('staff.shift-request'))->name('staff.shift-request');
+    Route::get('/attendance', fn () => view('staff.attendance'))->name('staff.attendance');
+    Route::get('/work-history', fn () => view('staff.work-history'))->name('staff.work-history');
+    Route::get('/manual', fn () => view('common.manual'))->name('common.manual');
+    Route::get('/notifications', fn () => view('common.notifications'))->name('common.notifications');
 });
 
-// 管理者ページ全体
+// 管理者ページ
 Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', fn () => view('admin.dashboard'))->name('dashboard');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
+
+    Route::get('/shift-requests', fn () => view('admin.shift-requests'))->name('shift-requests');
+    Route::get('/attendance', fn () => view('admin.attendance'))->name('attendance');
+    Route::get('/reports', fn () => view('admin.reports'))->name('reports');
+    Route::get('/activity-log', fn () => view('admin.activity-log'))->name('activity-log');
+    Route::get('/roles', fn () => view('admin.roles'))->name('roles');
+    Route::get('/settings', fn () => view('admin.settings'))->name('settings');
+    Route::get('/notifications', fn () => view('common.notifications'))->name('notifications');
 });
-
-// 管理者用社員一覧ページ
-// Route::middleware(['auth', 'is_admin'])->group(function () {
-//     Route::get('/users', [UserController::class, 'index'])->name('users.index');
-// });
-
 
 require __DIR__.'/auth.php';
