@@ -50,70 +50,13 @@
             </div>
         </div>
     </div>
-
+    
 <!-- Responsive Navigation Menu -->
 <div :class="{'block': open, 'hidden': ! open}" class="sm:hidden">
     <div class="pt-2 pb-3 space-y-1 px-4">
-        <!-- 共通 -->
-        <div class="text-xs text-gray-500 uppercase tracking-wider mt-2">共通</div>
-        @auth
-        <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">🏠 ダッシュボード</x-responsive-nav-link>
-            @if(auth()->user()->is_admin)
-                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">👑 管理者</x-responsive-nav-link>
-            @endif
-
-            <!-- シフトカテゴリ（共通見出し） -->
-            <details class="px-2 [&_summary::-webkit-details-marker]:hidden">
-                <summary class="text-base font-semibold text-gray-700 dark:text-gray-200 cursor-pointer list-none block leading-6 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900">📅 シフト</summary>
-                <div class="pl-4">
-                    @if(auth()->user()->is_admin)
-                        <x-responsive-nav-link :href="route('admin.shifts.index')" :active="request()->routeIs('admin.shifts.index')">🛠 シフト作成</x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('admin.shift-requests')" :active="request()->routeIs('admin.shift-requests')">📝 シフト希望一覧</x-responsive-nav-link>
-                    @else
-                        <x-responsive-nav-link :href="route('shifts.index')" :active="request()->routeIs('shifts.index')">📅 シフト表</x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.shift-request')" :active="request()->routeIs('staff.shift-request')">📝 シフト希望申請</x-responsive-nav-link>
-                    @endif
-                </div>
-            </details>
-
-            <!-- 勤怠カテゴリ -->
-            <details class="px-2 [&_summary::-webkit-details-marker]:hidden">
-                <summary class="text-base font-semibold text-gray-700 dark:text-gray-200 cursor-pointer list-none block leading-6 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900">🕒 勤怠管理</summary>
-                <div class="pl-4">
-                    @if(auth()->user()->is_admin)
-                        <x-responsive-nav-link :href="route('admin.attendance')" :active="request()->routeIs('admin.attendance')">📋 勤怠確認</x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('admin.reports')" :active="request()->routeIs('admin.reports')">📄 月次レポート</x-responsive-nav-link>
-                    @else
-                        <x-responsive-nav-link :href="route('staff.attendance')" :active="request()->routeIs('staff.attendance')">🕒 勤怠記録</x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('staff.work-history')" :active="request()->routeIs('staff.work-history')">🗓 勤務履歴</x-responsive-nav-link>
-                    @endif
-                </div>
-            </details>
-
-            <!-- 職員管理（管理者のみ） -->
-            @if(auth()->user()->is_admin)
-                <div class="text-xs text-gray-500 uppercase tracking-wider mt-4">職員管理</div>
-                <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.index')">👥 職員管理</x-responsive-nav-link>
-            @endif
-
-            <!-- 設定カテゴリ（マニュアル・通知・プロフ等） -->
-            <details class="px-2 [&_summary::-webkit-details-marker]:hidden">
-                <summary class="text-base font-semibold text-gray-700 dark:text-gray-200 cursor-pointer list-none block leading-6 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-900">⚙️ 設定</summary>
-                <div class="pl-4">
-                    @if(auth()->user()->is_admin)
-                        <x-responsive-nav-link :href="route('admin.activity-log')" :active="request()->routeIs('admin.activity-log')">📊 アクティビティログ</x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('admin.roles')" :active="request()->routeIs('admin.roles')">🔒 権限管理</x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('admin.settings')" :active="request()->routeIs('admin.settings')">⚙️ 各種設定</x-responsive-nav-link>
-                    @else
-                        <x-responsive-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')">👤 マイページ</x-responsive-nav-link>
-                    @endif
-                    <x-responsive-nav-link :href="route('common.manual')" :active="request()->routeIs('common.manual')">📘 マニュアル</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('common.notifications')" :active="request()->routeIs('common.notifications')">🔔 通知</x-responsive-nav-link>
-                </div>
-            </details>
-        @endauth
+        {{-- モバイルメニュー --}}
+        @include('layouts._nav-items-mobile')
     </div>
 </div>
-
 
 </nav>
