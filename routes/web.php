@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Admin\AdminShiftController;
+use App\Http\Controllers\Staff\ShiftRequestController;
 use Illuminate\Support\Facades\Route;
 
 // トップページ
@@ -28,6 +29,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
     Route::get('/shifts/events', [ShiftController::class, 'events'])->name('shifts.events');
     Route::get('/shift-request', fn () => view('staff.shift-request'))->name('staff.shift-request');
+    Route::post('/shift-request', [\App\Http\Controllers\Staff\ShiftRequestController::class, 'store'])->name('staff.shift-request.store'); // ← 追加
     Route::get('/attendance', fn () => view('staff.attendance'))->name('staff.attendance');
     Route::get('/work-history', fn () => view('staff.work-history'))->name('staff.work-history');
     Route::get('/manual', fn () => view('common.manual'))->name('common.manual');
@@ -48,6 +50,13 @@ Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/roles', fn () => view('admin.roles'))->name('roles');
     Route::get('/settings', fn () => view('admin.settings'))->name('settings');
     Route::get('/notifications', fn () => view('common.notifications'))->name('notifications');
+});
+
+// シフト希望申請
+Route::middleware(['auth'])->group(function () {
+    Route::get('/shift-request', [ShiftRequestController::class, 'create'])->name('staff.shift-request');
+    Route::post('/shift-request', [ShiftRequestController::class, 'store'])->name('staff.shift-request.store');
+    Route::get('/shift-request/events', [ShiftRequestController::class, 'events'])->name('staff.shift-request.events');
 });
 
 require __DIR__.'/auth.php';

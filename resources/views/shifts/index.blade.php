@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-    @section('content')
-    <div class="p-4">
-        <div id="calendar"></div>
-    </div>
-    @endsection
+@section('content')
+<div class="p-4">
+    <div id="calendar"></div>
+</div>
+@endsection
 
-    @push('style')
-        <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/main.min.css" rel="stylesheet" />
-    @endpush
+@push('style')
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/main.min.css" rel="stylesheet" />
+@endpush
 
-    @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
         if (calendarEl) {
             var calendar = new FullCalendar.Calendar(calendarEl, {
