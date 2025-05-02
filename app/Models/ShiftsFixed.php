@@ -11,9 +11,15 @@ class ShiftsFixed extends Model
     protected $fillable = [
         'user_id',
         'shift_type_id',
-        'weekday',
+        'week_patterns',
         'start_date',
-    ];
+        'end_date',
+        'note',
+    ];    
+
+    protected $casts = [
+        'week_patterns' => 'array',
+    ];    
 
     public function user()
     {
