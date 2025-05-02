@@ -10,6 +10,7 @@
 @if(auth()->user()->is_admin)
     <x-nav-item icon="🛠" label="シフト作成" :href="route('admin.shifts.index')" :active="request()->routeIs('admin.shifts.index')" indent />
     <x-nav-item icon="📝" label="シフト希望一覧" :href="route('admin.shift-requests')" :active="request()->routeIs('admin.shift-requests')" indent />
+    <x-nav-item icon="📌" label="固定シフト管理" :href="route('admin.fixed-shifts.index')" :active="request()->routeIs('admin.fixed-shifts.*')" indent />
 @else
     <x-nav-item icon="📅" label="シフト表" :href="route('shifts.index')" :active="request()->routeIs('shifts.index')" indent />
     <x-nav-item icon="📝" label="シフト希望申請" :href="route('staff.shift-request')" :active="request()->routeIs('staff.shift-request')" indent />

@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Admin\AdminShiftController;
+use App\Http\Controllers\Admin\FixedShiftController;
+use App\Http\Controllers\Admin\ShiftSettingController;
 use App\Http\Controllers\Staff\ShiftRequestController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +44,10 @@ Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
+
+    Route::get('/fixed-shifts', [FixedShiftController::class, 'index'])->name('fixed-shifts.index');
+    Route::post('/fixed-shifts', [FixedShiftController::class, 'store'])->name('fixed-shifts.store');
+    Route::delete('/fixed-shifts/{id}', [FixedShiftController::class, 'destroy'])->name('fixed-shifts.destroy');
 
     Route::post('/shifts/apply-requests', [AdminShiftController::class, 'applyRequests'])->name('shifts.apply-requests');
 

@@ -10,6 +10,7 @@
 @if(auth()->user()->is_admin)
     <a href="{{ route('admin.shifts.index') }}" class="block px-6 py-2 hover:bg-gray-100">🛠 シフト作成</a>
     <a href="{{ route('admin.shift-requests') }}" class="block px-6 py-2 hover:bg-gray-100">📝 シフト希望一覧</a>
+    <a href="{{ route('admin.fixed-shifts.index') }}" class="block px-6 py-2 hover:bg-gray-100">📌 固定シフト管理</a>
 @else
     <a href="{{ route('shifts.index') }}" class="block px-6 py-2 hover:bg-gray-100">📅 シフト表</a>
     <a href="{{ route('staff.shift-request') }}" class="block px-6 py-2 hover:bg-gray-100">📝 シフト希望申請</a>
