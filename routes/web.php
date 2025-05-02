@@ -28,28 +28,35 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
     Route::get('/shifts/events', [ShiftController::class, 'events'])->name('shifts.events');
-    Route::get('/shift-request', fn () => view('staff.shift-request'))->name('staff.shift-request');
+    Route::get('/shift-request', fn() => view('staff.shift-request'))->name('staff.shift-request');
     Route::post('/shift-request', [\App\Http\Controllers\Staff\ShiftRequestController::class, 'store'])->name('staff.shift-request.store'); // ← 追加
-    Route::get('/attendance', fn () => view('staff.attendance'))->name('staff.attendance');
-    Route::get('/work-history', fn () => view('staff.work-history'))->name('staff.work-history');
-    Route::get('/manual', fn () => view('common.manual'))->name('common.manual');
-    Route::get('/notifications', fn () => view('common.notifications'))->name('common.notifications');
+    Route::get('/attendance', fn() => view('staff.attendance'))->name('staff.attendance');
+    Route::get('/work-history', fn() => view('staff.work-history'))->name('staff.work-history');
+    Route::get('/manual', fn() => view('common.manual'))->name('common.manual');
+    Route::get('/notifications', fn() => view('common.notifications'))->name('common.notifications');
 });
 
 // 管理者ページ
 Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', fn () => view('admin.dashboard'))->name('dashboard');
+    Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
 
-    Route::get('/shift-requests', fn () => view('admin.shift-requests'))->name('shift-requests');
-    Route::get('/attendance', fn () => view('admin.attendance'))->name('attendance');
-    Route::get('/reports', fn () => view('admin.reports'))->name('reports');
-    Route::get('/activity-log', fn () => view('admin.activity-log'))->name('activity-log');
-    Route::get('/roles', fn () => view('admin.roles'))->name('roles');
-    Route::get('/settings', fn () => view('admin.settings'))->name('settings');
-    Route::get('/notifications', fn () => view('common.notifications'))->name('notifications');
+    Route::post('/shifts/apply-requests', [AdminShiftController::class, 'applyRequests'])->name('shifts.apply-requests');
+
+    Route::get('/shifts/settings', [ShiftSettingController::class, 'index'])->name('shifts.settings');
+    Route::post('/shifts/settings/deadlines', [ShiftSettingController::class, 'storeDeadline'])->name('shifts.settings.deadlines.store');
+    Route::delete('/shifts/settings/deadlines/{id}', [ShiftSettingController::class, 'deleteDeadline'])->name('shifts.settings.deadlines.delete');
+
+
+    Route::get('/shift-requests', fn() => view('admin.shift-requests'))->name('shift-requests');
+    Route::get('/attendance', fn() => view('admin.attendance'))->name('attendance');
+    Route::get('/reports', fn() => view('admin.reports'))->name('reports');
+    Route::get('/activity-log', fn() => view('admin.activity-log'))->name('activity-log');
+    Route::get('/roles', fn() => view('admin.roles'))->name('roles');
+    Route::get('/settings', fn() => view('admin.settings'))->name('settings');
+    Route::get('/notifications', fn() => view('common.notifications'))->name('notifications');
 });
 
 // シフト希望申請
@@ -59,4 +66,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/shift-request/events', [ShiftRequestController::class, 'events'])->name('staff.shift-request.events');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

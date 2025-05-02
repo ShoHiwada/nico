@@ -9,14 +9,12 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    // シフト種別）
     public function up(): void
     {
-        Schema::create('shift_types', function (Blueprint $table) {
+        Schema::create('shifts_request_deadlines', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // 日勤・夜勤など
-            $table->time('start_time');
-            $table->time('end_time');
+            $table->string('month'); // 例: "2025-05"
+            $table->date('deadline_date');
             $table->timestamps();
         });        
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('shift_types');
+        Schema::dropIfExists('shifts_request_deadlines');
     }
 };

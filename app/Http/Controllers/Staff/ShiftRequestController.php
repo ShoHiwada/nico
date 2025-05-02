@@ -31,14 +31,19 @@ class ShiftRequestController extends Controller
         $userId = Auth::id();
     
         foreach ($request->dates as $date) {
-            \App\Models\ShiftRequest::create([
-                'user_id'    => $userId,
-                'month'      => $request->month,
-                'date'       => $date,
-                'shift_type_id' => $request->shift_type,
-                'status'        => 'pending', // ← 初期値
-            ]);
+            \App\Models\ShiftRequest::updateOrCreate(
+                [
+                    'user_id'       => $userId,
+                    'date'          => $date,
+                ],
+                [
+                    'month'         => $request->month,
+                    'shift_type_id' => $request->shift_type,
+                    'status'        => 'pending',
+                ]
+            );
         }
+        
     
         return redirect()->route('staff.shift-request')->with('success', '申請を保存しました');
     }

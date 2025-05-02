@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShiftRequest extends Model
 {
+
+    protected $table = 'shifts_requests';
+    
     protected $fillable = [
         'user_id',
         'month',

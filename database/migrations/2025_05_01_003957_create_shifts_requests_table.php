@@ -9,15 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    //（シフト希望）
     public function up(): void
     {
-        Schema::create('shift_requests', function (Blueprint $table) {
+        Schema::create('shifts_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->date('date');
             $table->foreignId('shift_type_id')->constrained()->onDelete('cascade');
-            $table->string('status')->default('pending'); // （申請中／承認／却下）
+            $table->string('month'); // 例: "2025-05"
+            $table->date('date');
+            $table->string('status')->default('pending');
+            $table->text('note')->nullable();
             $table->timestamps();
         });        
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('shift_requests');
+        Schema::dropIfExists('shifts_requests');
     }
 };
