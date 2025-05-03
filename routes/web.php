@@ -57,6 +57,8 @@ Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->grou
 
 
     Route::get('/shift-requests', fn() => view('admin.shift-requests'))->name('shift-requests');
+    Route::delete('/shift-request/{date}', [ShiftRequestController::class, 'destroy'])->middleware('auth')->name('staff.shift-request.destroy');
+
     Route::get('/attendance', fn() => view('admin.attendance'))->name('attendance');
     Route::get('/reports', fn() => view('admin.reports'))->name('reports');
     Route::get('/activity-log', fn() => view('admin.activity-log'))->name('activity-log');

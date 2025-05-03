@@ -13,8 +13,12 @@ class ShiftRequest extends Model
         'user_id',
         'month',
         'date',
-        'shift_type_id',
+        'week_patterns',
         'status',
+    ];
+
+    protected $casts = [
+        'week_patterns' => 'array',
     ];
 
     public function user()
