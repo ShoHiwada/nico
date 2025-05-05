@@ -49,6 +49,9 @@ Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/fixed-shifts', [FixedShiftController::class, 'index'])->name('fixed-shifts.index');
     Route::post('/fixed-shifts', [FixedShiftController::class, 'store'])->name('fixed-shifts.store');
     Route::delete('/fixed-shifts/{id}', [FixedShiftController::class, 'destroy'])->name('fixed-shifts.destroy');
+    // Route::post('/shifts/apply-fixed', [ShiftController::class, 'applyFixed'])->name('shifts.apply-fixed');
+    Route::post('/shifts/apply-fixed', [AdminShiftController::class, 'applyFixed'])->name('shifts.apply-fixed');
+
 
     Route::post('/shifts/apply-requests', [AdminShiftController::class, 'applyRequests'])->name('shifts.apply-requests');
 

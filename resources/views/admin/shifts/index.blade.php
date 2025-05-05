@@ -42,6 +42,30 @@
     <div id="calendar"></div>
 </div>
 
+<!-- 固定シフトを反映 -->
+<div class="mt-6 p-4 bg-white rounded shadow">
+    <h2 class="text-lg font-bold mb-2">固定シフトを反映</h2>
+
+    <form method="POST" action="{{ route('admin.shifts.apply-fixed') }}">
+        @csrf
+        <input type="hidden" name="month" value="{{ request()->query('month', now()->format('Y-m')) }}">
+
+        <div class="mb-4">
+            <label class="block font-medium mb-1">対象職員（複数選択可）</label>
+            <select id="fixed-user-select" name="user_ids[]" multiple size="6" class="w-full border px-3 py-2 rounded">
+                @foreach ($users as $user)
+                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            選択した職員の固定シフトを反映
+        </button>
+    </form>
+</div>
+
+
 <div class="mt-6 p-4 bg-white rounded shadow">
     <h2 class="text-lg font-bold mb-2">希望シフトを反映</h2>
 
@@ -119,7 +143,7 @@
         const dateInput = document.getElementById('date-input');
         const userFilter = document.getElementById('user-filter');
         const allEvents = @json($shifts);
-
+        
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'ja',
@@ -156,29 +180,35 @@
 
         calendar.render();
 
+        // Select 共通関数化
         userFilter.addEventListener('change', function() {
-            calendar.refetchEvents();
-        });
+                    calendar.refetchEvents();
+                });
+                function initTomSelectWithToggle(selector) {
+            const element = document.querySelector(selector);
+            if (!element) return;
 
-        // Tom Select
-        new TomSelect('#user-select', {
-            plugins: ['remove_button'],
-            maxItems: null,
-            placeholder: '職員を選んでください',
-        });
+            // TomSelectの初期化
+            new TomSelect(selector, {
+                plugins: ['remove_button'],
+                maxItems: null,
+                placeholder: '職員を選んでください',
+            });
 
-        // クリック選択トグル
-        const select = document.getElementById('user-select');
-        if (select) {
-            select.addEventListener('mousedown', function(e) {
+            // トグルクリック（TomSelectと両対応）
+            element.addEventListener('mousedown', function(e) {
                 e.preventDefault();
                 const option = e.target;
                 if (option.tagName.toLowerCase() === 'option') {
                     option.selected = !option.selected;
-                    select.dispatchEvent(new Event('change')); // Tom Selectにも反映
+                    element.dispatchEvent(new Event('change'));
                 }
             });
         }
+
+        initTomSelectWithToggle('#user-select');
+        initTomSelectWithToggle('#fixed-user-select');
+
     });
 </script>
 @endpush
