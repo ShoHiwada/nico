@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminShiftController;
 use App\Http\Controllers\Admin\FixedShiftController;
 use App\Http\Controllers\Admin\ShiftSettingController;
 use App\Http\Controllers\Staff\ShiftRequestController;
+use App\Http\Controllers\Staff\ShiftRequestNoteController;
 use Illuminate\Support\Facades\Route;
 
 // トップページ
@@ -72,6 +73,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/shift-request', [ShiftRequestController::class, 'create'])->name('staff.shift-request');
     Route::post('/shift-request', [ShiftRequestController::class, 'store'])->name('staff.shift-request.store');
     Route::get('/shift-request/events', [ShiftRequestController::class, 'events'])->name('staff.shift-request.events');
+    Route::get('shift-request-notes/{month}/edit', [ShiftRequestNoteController::class, 'edit'])->name('shift_request_notes.edit');
+    Route::post('shift-request-notes/{month}', [ShiftRequestNoteController::class, 'update'])->name('shift_request_notes.update');
 });
 
 require __DIR__ . '/auth.php';

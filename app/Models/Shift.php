@@ -14,6 +14,9 @@ class Shift extends Model
         'building',
     ];
 
+    protected $casts = [
+        'shift_type_ids' => 'array',
+    ];
 
     public function user()
     {

@@ -49,7 +49,7 @@
         <!-- 備考 -->
         <div class="mb-4">
             <label class="block font-medium mb-1">備考（任意）</label>
-            <textarea name="note" rows="3" class="w-full border rounded px-3 py-2"></textarea>
+            <textarea name="note" rows="3" class="w-full border rounded px-3 py-2">{{ old('note', $note->note ?? '') }}</textarea>
         </div>
 
         <div class="text-right">

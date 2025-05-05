@@ -65,12 +65,12 @@ class AdminShiftController extends Controller
         $month = $request->month;
         $userIds = $request->user_ids;
     
-        $userNames = User::whereIn('id', $userIds)->pluck('name', 'id'); // id => name
+        $userNames = User::whereIn('id', $userIds)->pluck('name', 'id');
         $messages = [];
     
         foreach ($userIds as $userId) {
             $name = $userNames[$userId] ?? '未登録ユーザー';
-            $requests = \App\Models\ShiftRequest::where('month', $month)
+            $requests = ShiftRequest::where('month', $month)
                 ->where('user_id', $userId)
                 ->get();
     
@@ -80,15 +80,30 @@ class AdminShiftController extends Controller
             }
     
             foreach ($requests as $req) {
-                \App\Models\Shift::updateOrCreate(
-                    ['user_id' => $req->user_id, 'date' => $req->date],
-                    ['shift_type_id' => $req->shift_type_id, 'status' => 'from_request']
-                );
+                $patterns = json_decode($req->week_patterns, true);
+    
+                if (!is_array($patterns) || empty($patterns)) {
+                    continue;
+                }
+    
+                foreach ($patterns as $shiftTypeId) {
+                    Shift::updateOrCreate(
+                        [
+                            'user_id' => $req->user_id,
+                            'date'    => $req->date,
+                        ],
+                        [
+                            'shift_type_id' => $shiftTypeId,
+                            'status'        => 'from_request',
+                        ]
+                    );
+                }
             }
     
             $messages[] = "{$name}さんの希望シフトを反映しました。";
         }
     
         return redirect()->route('admin.shifts.index')->with('success', implode('<br>', $messages));
-    }    
+    }
+    
 }

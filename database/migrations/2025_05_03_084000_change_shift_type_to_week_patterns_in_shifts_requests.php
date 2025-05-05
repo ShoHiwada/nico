@@ -12,12 +12,12 @@ return new class extends Migration
     public function up()
     {
         Schema::table('shifts_requests', function (Blueprint $table) {
-            $table->dropForeign(['shift_type_id']);
-            $table->dropColumn('shift_type_id');
-    
-            $table->json('week_patterns')->after('date')->nullable();
+            if (!Schema::hasColumn('shifts_requests', 'week_patterns')) {
+                $table->json('week_patterns')->after('date')->nullable();
+            }
         });
     }
+    
         
     /**
      * Reverse the migrations.

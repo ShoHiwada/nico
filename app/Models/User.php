@@ -92,4 +92,13 @@ class User extends Authenticatable
     {
         return $this->hasMany(AdminLog::class, 'admin_user_id');
     }
+    public function shiftRequestNotes()
+    {
+        return $this->hasMany(ShiftRequestNote::class);
+    }
+    // 月ごとの備考を取得
+    public function shiftRequestNoteFor($month)
+    {
+        return $this->hasOne(ShiftRequestNote::class)->where('month', $month);
+    }
 }

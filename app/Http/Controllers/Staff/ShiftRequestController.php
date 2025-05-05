@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ShiftRequest;
+use App\Models\ShiftRequestNote;
 
 class ShiftRequestController extends Controller
 {
@@ -17,8 +18,10 @@ class ShiftRequestController extends Controller
         ];
 
         $shiftTypes = \App\Models\ShiftType::all();
+        $selectedMonth = now()->format('Y-m');
+        $note = ShiftRequestNote::where('user_id', Auth::id())->where('month', $selectedMonth)->first();
 
-        return view('staff.shift-request', compact('availableMonths', 'shiftTypes'));
+        return view('staff.shift-request', compact('availableMonths', 'shiftTypes', 'note', 'selectedMonth'));
     }
 
     public function store(Request $request)
@@ -27,9 +30,16 @@ class ShiftRequestController extends Controller
             'month' => 'required',
             'week_patterns' => 'nullable|array',
             'deleted_dates' => 'nullable|array',
+            'note' => 'nullable|string',
         ]);
     
         $userId = Auth::id();
+
+        // 備考を保存
+        ShiftRequestNote::updateOrCreate(
+            ['user_id' => $userId, 'month' => $request->month],
+            ['note' => $request->note]
+        );
     
         // 削除分処理（同月のみ or 指定日付）
         if (!empty($request->deleted_dates)) {
