@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Building extends Model
 {
-    public function branch()
+    protected $fillable = ['branch_id', 'name'];
+
+    public function shifts()
     {
-        return $this->belongsTo(Branch::class);
+        return $this->hasMany(\App\Models\Shift::class);
     }
 }

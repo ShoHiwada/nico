@@ -88,43 +88,43 @@
     </form>
 </div>
 
-<div class="mt-4 p-4 bg-white rounded shadow">
-    <h2 class="text-xl font-bold mb-4">シフト登録フォーム</h2>
+<div class="mt-6 p-6 bg-white rounded shadow">
+    <h2 class="text-2xl font-bold mb-6 border-b pb-2">シフト登録フォーム</h2>
+    
     <form id="shift-form" action="{{ route('admin.shifts.store') }}" method="POST">
         @csrf
-        <div class="mb-2">
-            <label>従業員</label>
-            <select name="user_id" class="form-select">
+
+        <div class="mb-4">
+            <label for="user_id" class="block font-medium text-gray-700 mb-1">従業員</label>
+            <select name="user_id" id="user_id" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
                 @foreach ($users as $user)
-                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    <option value="{{ $user->id }}">{{ $user->name }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="mb-2">
-            <label>日にち</label>
-            <input type="text" id="date-input" name="date" class="form-input" readonly>
+
+        <div class="mb-4">
+            <label for="date-input" class="block font-medium text-gray-700 mb-1">日にち</label>
+            <input type="text" id="date-input" name="date" class="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed" readonly>
         </div>
-        <div class="mb-2">
-            <label>シフトタイプ</label>
-            <select name="type" class="form-select">
-                <option value="day">日勤</option>
-                <option value="night">夜勤</option>
+
+        <div class="mb-4">
+            <label for="type" class="block font-medium text-gray-700 mb-1">勤務タイプ</label>
+            <select name="type" id="type" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                @foreach($shiftTypes as $type)
+                    <option value="{{ $type->id }}">{{ $type->name }}（{{ $type->start_time }}〜{{ $type->end_time }}）</option>
+                @endforeach
             </select>
         </div>
-        <div class="mb-2" id="building-field">
-            <label>建物</label>
-            <select name="building" class="form-select">
-                <option value="">選択してください</option>
-                <option value=1>アーバンスカイ</option>
-                <option value=2>パウぜ福大前</option>
-                <option value=3>CSハイツ</option>
-                <option value=4>ローレル片方</option>
-                <option value=5>マルワコーポ福大前</option>
-            </select>
+
+        <div class="text-right">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded shadow">
+                登録する
+            </button>
         </div>
-        <button type="submit" class="btn btn-primary mt-2">Submit</button>
     </form>
 </div>
+
 @endsection
 
 @push('styles')
@@ -143,7 +143,7 @@
         const dateInput = document.getElementById('date-input');
         const userFilter = document.getElementById('user-filter');
         const allEvents = @json($shifts);
-        
+
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'ja',

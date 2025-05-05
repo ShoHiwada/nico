@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Shift;
 use App\Models\User;
 use App\Models\ShiftRequest;
+use App\Models\ShiftType;
 use Carbon\Carbon;
 
 class AdminShiftController extends Controller
@@ -14,13 +15,12 @@ class AdminShiftController extends Controller
     public function index()
     {
         $users = User::all();
+        $shiftTypes = ShiftType::all();
     
         $shifts = Shift::with(['user', 'shiftType'])->get()
             ->groupBy(fn($s) => $s->user_id . '_' . $s->date)
             ->map(function ($group) {
                 $first = $group->first();
-    
-                // 勤務タイプ（例：早番/遅番）をまとめる
                 $types = $group->pluck('shiftType.name')->filter()->unique();
                 $typeText = $types->implode('/');
     
@@ -32,7 +32,7 @@ class AdminShiftController extends Controller
             })
             ->values();
     
-        return view('admin.shifts.index', compact('users', 'shifts'));
+        return view('admin.shifts.index', compact('users', 'shifts', 'shiftTypes'));
     }
     
 

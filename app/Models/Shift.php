@@ -26,6 +26,10 @@ class Shift extends Model
     {
         return $this->belongsTo(ShiftType::class);
     }
+    // public function building()
+    // {
+    //     return $this->belongsTo(\App\Models\Building::class);
+    // }
     public function logs()
     {
         return $this->hasMany(ShiftLog::class);
