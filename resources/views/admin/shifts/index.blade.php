@@ -147,7 +147,7 @@
 <script>
     let shiftDateTarget = null;
     let shiftData = {}; // 例: { "2025-06-01": [1, 3] }
-    let deletedDates = []; // ← これを shiftData の定義の下に追加
+    let deletedDates = [];
 
     document.addEventListener('DOMContentLoaded', function() {
         // FullCalendar
@@ -206,10 +206,39 @@
 
         calendar.render();
 
+        // イベントクリックで削除
+        calendar.setOption('eventClick', function(info) {
+            const event = info.event;
+            const date = event.startStr;
+            const userId = event.extendedProps.user_id;
+
+            if (!confirm('このシフトを削除しますか？')) return;
+
+            // deletedDates に追加（重複防止あり）
+            if (!alreadyDeleted(date, userId)) {
+                deletedDates.push({ date, user_id: userId });
+            }
+
+            // shiftData からも削除
+            if (shiftData[date] && shiftData[date][userId]) {
+                delete shiftData[date][userId];
+
+                if (Object.keys(shiftData[date]).length === 0) {
+                    delete shiftData[date];
+                }
+            }
+
+            // カレンダーからイベント削除
+            event.remove();
+            // hidden input 再構築
+            updateShiftInputs();
+        });
+
+
         const shiftTypeNames = @json($shiftTypes->pluck('name', 'id'));
 
         document.getElementById('registerShift').addEventListener('click', () => {
-            const selectedUserIds = formUserSelect.getValue(); // ← TomSelect対応：複数取得
+            const selectedUserIds = formUserSelect.getValue(); // TomSelect対応：複数取得
             const checkboxes = document.querySelectorAll('input[name="modal_shift_types[]"]:checked');
             const selectedIds = Array.from(checkboxes).map(cb => cb.value);
 
@@ -257,7 +286,6 @@
                 });
             }
 
-            // 入力初期化（任意）
             formUserSelect.clear();
             document.querySelectorAll('input[name="modal_shift_types[]"]').forEach(cb => cb.checked = false);
 
@@ -265,7 +293,6 @@
         });
 
 
-        // console.log(shiftData)
         function updateShiftInputs() {
             const form = document.getElementById('shift-form');
             form.querySelectorAll('input[name^="shifts["], input[name="deleted_dates[]"]').forEach(el => el.remove());
@@ -282,13 +309,16 @@
                 }
             }
 
-            deletedDates.forEach(date => {
+            deletedDates.forEach(({ date, user_id }) => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'deleted_dates[]';
-                input.value = date;
+                input.value = JSON.stringify({ date, user_id });
                 form.appendChild(input);
             });
+
+            console.log('削除予定:', deletedDates);
+
         }
 
 
@@ -337,6 +367,11 @@
             updateShiftInputs();
             document.getElementById('shift-form').submit();
         });
+
+        // 重複削除防止用
+        function alreadyDeleted(date, userId) {
+            return deletedDates.some(item => item.date === date && item.user_id === userId);
+        }
     });
 </script>
 @endpush

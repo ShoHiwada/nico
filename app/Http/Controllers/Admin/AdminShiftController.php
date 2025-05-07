@@ -39,8 +39,9 @@ class AdminShiftController extends Controller
     public function store(Request $request)
     {
         $shifts = $request->input('shifts', []);
-        // dd($shifts);
+        $deletedDates = $request->input('deleted_dates', []);
     
+        // 1. 登録・更新
         foreach ($shifts as $date => $userData) {
             foreach ($userData as $userId => $typeIds) {
                 foreach ($typeIds as $typeId) {
@@ -58,8 +59,25 @@ class AdminShiftController extends Controller
             }
         }
     
+        // 2. 削除
+        $deletedDates = $request->input('deleted_dates', []);
+
+        foreach ($deletedDates as $json) {
+            $delete = json_decode($json, true);
+        
+            if (!is_array($delete) || !isset($delete['date'], $delete['user_id'])) {
+                continue;
+            }
+        
+            Shift::where('date', $delete['date'])
+                ->where('user_id', $delete['user_id'])
+                ->delete();
+        }
+        
+    
         return redirect()->route('admin.shifts.index')->with('success', 'シフトを保存しました');
     }
+    
     
 
     // 固定シフト反映
