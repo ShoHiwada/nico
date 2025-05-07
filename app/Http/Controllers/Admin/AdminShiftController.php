@@ -38,29 +38,29 @@ class AdminShiftController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'date' => 'required|date',
-            'type' => 'required|in:day,night',
-            'building' => [
-                'nullable',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($request->type === 'night' && empty($value)) {
-                        $fail('夜勤の場合、建物の指定が必要です。');
-                    }
-                },
-            ],
-        ]);
-
-        Shift::create([
-            'user_id' => $request->user_id,
-            'date' => $request->date,
-            'type' => $request->type,
-            'building' => $request->building,
-        ]);
-
-        return redirect()->route('admin.shifts.index')->with('success', 'シフトを登録しました');
+        $shifts = $request->input('shifts', []);
+        // dd($shifts);
+    
+        foreach ($shifts as $date => $userData) {
+            foreach ($userData as $userId => $typeIds) {
+                foreach ($typeIds as $typeId) {
+                    Shift::updateOrCreate(
+                        [
+                            'user_id' => $userId,
+                            'date' => $date,
+                            'shift_type_id' => $typeId,
+                        ],
+                        [
+                            'status' => 'draft',
+                        ]
+                    );
+                }
+            }
+        }
+    
+        return redirect()->route('admin.shifts.index')->with('success', 'シフトを保存しました');
     }
+    
 
     // 固定シフト反映
     public function applyFixed(Request $request)
