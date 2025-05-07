@@ -19,6 +19,7 @@ class ShiftRequest extends Model
 
     protected $casts = [
         'week_patterns' => 'array',
+        'types' => 'array',
     ];
 
     public function user()

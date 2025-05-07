@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminShiftController;
 use App\Http\Controllers\Admin\FixedShiftController;
 use App\Http\Controllers\Admin\ShiftSettingController;
 use App\Http\Controllers\Staff\ShiftRequestController;
+use App\Http\Controllers\Admin\AdminShiftRequestController;
 use App\Http\Controllers\Staff\ShiftRequestNoteController;
 use Illuminate\Support\Facades\Route;
 
@@ -58,9 +59,9 @@ Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/shifts/settings', [ShiftSettingController::class, 'index'])->name('shifts.settings');
     Route::post('/shifts/settings/deadlines', [ShiftSettingController::class, 'storeDeadline'])->name('shifts.settings.deadlines.store');
     Route::delete('/shifts/settings/deadlines/{id}', [ShiftSettingController::class, 'deleteDeadline'])->name('shifts.settings.deadlines.delete');
+    Route::get('/shift-requests', [AdminShiftRequestController::class, 'index'])->name('shift-requests');
 
-
-    Route::get('/shift-requests', fn() => view('admin.shift-requests'))->name('shift-requests');
+    // Route::get('/shift-requests', fn() => view('admin.shift-requests'))->name('shift-requests');
     Route::delete('/shift-request/{date}', [ShiftRequestController::class, 'destroy'])->middleware('auth')->name('staff.shift-request.destroy');
 
     Route::get('/attendance', fn() => view('admin.attendance'))->name('attendance');
