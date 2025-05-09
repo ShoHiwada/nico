@@ -13,34 +13,41 @@ use Carbon\Carbon;
 class AdminShiftRequestController extends Controller
 {
     
-    public function index()
+    public function index(Request $request)
     {
+        $selectedMonth = $request->input('month') ?? now()->format('Y-m');
+    
+        $availableMonths = ShiftRequest::selectRaw('DISTINCT DATE_FORMAT(date, "%Y-%m") as month')
+            ->pluck('month');
+    
         $users = User::all();
         $shiftTypes = ShiftType::all()->keyBy('id');
-        $requests = ShiftRequest::with('user')->get()->groupBy('user_id');
-
+    
+        $requests = ShiftRequest::where('date', 'like', "{$selectedMonth}%")
+            ->with('user')
+            ->get()
+            ->groupBy('user_id');
+    
         $formatted = [];
         foreach ($requests as $userId => $userRequests) {
             foreach ($userRequests as $req) {
-                
-                $dow = Carbon::parse($req->date)->isoFormat('E'); //日付から曜日番号（1=月, 7=日）
-        
-                // ↓week_patternsはJSON配列なので直接デコード（配列である前提）
-                $patternsRaw = $req->week_patterns;
-                $patterns = is_array($patternsRaw) ? $patternsRaw : json_decode($patternsRaw, true) ?? [];
-        
+                $dow = Carbon::parse($req->date)->isoFormat('E');
+                $patterns = is_array($req->week_patterns) ? $req->week_patterns : json_decode($req->week_patterns, true) ?? [];
+    
                 foreach ($patterns as $typeId) {
-                    $formatted[$userId][$dow][] = $shiftTypes[$typeId]->name ?? '不明';
+                    $formatted[$userId][$req->date][] = $shiftTypes[$typeId]->name ?? '不明';
                 }
             }
         }
-        
     
         return view('admin.shift-requests', [
             'users' => $users,
-            'requestsByWeekday' => $formatted,
-        ]);        
+            'requestsByDate' => $formatted,
+            'availableMonths' => $availableMonths,
+            'selectedMonth' => $selectedMonth,
+        ]);
     }
+    
     
 
 }
