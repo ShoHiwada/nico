@@ -4,6 +4,24 @@
 <div class="max-w-3xl mx-auto p-6 bg-white rounded shadow">
     <h2 class="text-xl font-bold mb-4">シフト希望申請</h2>
 
+@if($deadline)
+    @php
+        $isDeadlineOver = $deadline && now()->gt($deadline->deadline_date);
+        $formattedDate = $deadline ? \Carbon\Carbon::parse($deadline->deadline_date)->format('Y年n月j日') : null;
+        $formattedMonth = \Carbon\Carbon::parse($selectedMonth . '-01')->format('Y年n月');
+    @endphp
+
+    @if ($isDeadlineOver)
+        <div class="text-sm text-red-600 mb-2">
+            ※ {{ $formattedMonth }}分のシフト希望は、{{ $formattedDate }}が締切日で、すでに締切を過ぎています。
+        </div>
+    @else
+        <div class="text-sm text-gray-600 mb-2">
+            ※ {{ $formattedMonth }}分のシフト希望の締切は <strong>{{ $formattedDate }}</strong> です。
+        </div>
+    @endif
+@endif
+
     <!-- カレンダー -->
     <div class="p-4">
         <div id="calendar"></div>
@@ -53,7 +71,12 @@
         </div>
 
         <div class="text-right">
-            <button type="button" id="submitShift" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">申請</button>
+            <button type="submit"
+                    id="submitShift"
+                    class="{{ $isDeadlineOver ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white' }} px-4 py-2 rounded"
+                    {{ $isDeadlineOver ? 'disabled' : '' }}>
+                申請
+            </button>
         </div>
     </form>
 </div>

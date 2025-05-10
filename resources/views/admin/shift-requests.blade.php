@@ -1,7 +1,30 @@
 @extends('layouts.app')
 
 @section('content')
+
 <h2 class="text-2xl font-bold mb-6">シフト希望 一覧</h2>
+
+<div class="mb-6 border rounded shadow p-3 bg-gray-50">
+    <h3 class="font-semibold text-lg mb-2">シフト希望の締切設定</h3>
+
+    <form id="deadlineForm" action="{{ route('admin.deadlines.store') }}" method="POST" class="flex items-center gap-4">
+        @csrf
+
+        <label class="text-sm">対象月：</label>
+        <select id="selectedMonth" name="month" class="border rounded px-2 py-1">
+            @foreach ($availableMonths as $month)
+                <option value="{{ $month }}">{{ $month }}</option>
+            @endforeach
+        </select>
+
+        <label class="text-sm">締切日：</label>
+        <input type="date" name="deadline_date" class="border rounded px-2 py-1" required>
+
+        <button type="submit" class="bg-blue-500 text-white px-4 py-1 rounded">保存</button>
+
+        <div id="existingDeadline" class="text-sm text-gray-500 ml-4 hidden"></div>
+    </form>
+</div>
 
 <form method="GET" class="mb-4">
     <label class="font-medium">表示月：</label>
@@ -80,6 +103,38 @@
 
 @push('scripts')
 <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const deadlines = @json($deadlines); // 例: { "2025-05": "2025-05-20" }
+        const monthSelect = document.getElementById('selectedMonth');
+        const form = document.getElementById('deadlineForm');
+        const existing = document.getElementById('existingDeadline');
+
+        function updateDisplay() {
+            const selectedMonth = monthSelect.value;
+            const deadline = deadlines[selectedMonth];
+            if (deadline) {
+                existing.textContent = `設定済み：${deadline}〆切`;
+                existing.classList.remove('hidden');
+            } else {
+                existing.textContent = '';
+                existing.classList.add('hidden');
+            }
+        }
+
+        monthSelect.addEventListener('change', updateDisplay);
+        updateDisplay(); // 初期表示
+
+        form.addEventListener('submit', function (e) {
+            const selectedMonth = monthSelect.value;
+            const deadline = deadlines[selectedMonth];
+            if (deadline) {
+                const confirmed = confirm(`この月にはすでに締切（${deadline}）が設定されています。上書きしますか？`);
+                if (!confirmed) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
     function toggleCalendar(userId) {
         const calendar = document.getElementById('calendar-' + userId);
         calendar.classList.toggle('hidden');

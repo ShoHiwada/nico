@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ShiftRequest;
 use App\Models\ShiftRequestNote;
+use App\Models\ShiftRequestDeadline;
 
 class ShiftRequestController extends Controller
 {
@@ -20,8 +21,9 @@ class ShiftRequestController extends Controller
         $shiftTypes = \App\Models\ShiftType::all();
         $selectedMonth = now()->format('Y-m');
         $note = ShiftRequestNote::where('user_id', Auth::id())->where('month', $selectedMonth)->first();
+        $deadline = ShiftRequestDeadline::where('month', $selectedMonth)->first();
 
-        return view('staff.shift-request', compact('availableMonths', 'shiftTypes', 'note', 'selectedMonth'));
+        return view('staff.shift-request', compact('availableMonths', 'shiftTypes', 'note', 'selectedMonth', 'deadline'));
     }
 
     public function store(Request $request)
@@ -32,6 +34,14 @@ class ShiftRequestController extends Controller
             'deleted_dates' => 'nullable|array',
             'note' => 'nullable|string',
         ]);
+
+        $deadline = ShiftRequestDeadline::where('month', $request->month)->first();
+
+        if ($deadline && now()->gt($deadline->deadline_date)) {
+            return back()->withErrors([
+                'month' => '締切日（' . $deadline->deadline_date . '）を過ぎているため、申請できません。',
+            ])->withInput();
+        }
     
         $userId = Auth::id();
 
