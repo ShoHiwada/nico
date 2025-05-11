@@ -101,4 +101,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(ShiftRequestNote::class)->where('month', $month);
     }
+    // 夜勤シフトテーブル用
+    public function nightShiftAssignments()
+    {
+        return $this->hasMany(NightShiftAssignment::class);
+    }
 }

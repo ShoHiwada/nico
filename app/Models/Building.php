@@ -12,4 +12,9 @@ class Building extends Model
     {
         return $this->hasMany(\App\Models\Shift::class);
     }
+
+    public function nightShiftAssignments()
+    {
+        return $this->hasMany(NightShiftAssignment::class);
+    }
 }
