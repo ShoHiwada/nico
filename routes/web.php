@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Staff\ShiftRequestController;
 use App\Http\Controllers\Admin\AdminShiftRequestController;
 use App\Http\Controllers\Staff\ShiftRequestNoteController;
+use App\Http\Controllers\Admin\NightShiftController;
 use Illuminate\Support\Facades\Route;
 
 // トップページ
@@ -47,6 +48,8 @@ Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
+
+    Route::get('/shifts/night', [NightShiftController::class, 'index'])->name('shifts.night.index');
 
     Route::get('/fixed-shifts', [FixedShiftController::class, 'index'])->name('fixed-shifts.index');
     Route::post('/fixed-shifts', [FixedShiftController::class, 'store'])->name('fixed-shifts.store');

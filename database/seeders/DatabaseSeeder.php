@@ -63,9 +63,16 @@ class DatabaseSeeder extends Seeder
             'branch_id' => 1,
         ]);
 
+        // シフトタイプを作成
+        $this->call([
+            ShiftTypeSeeder::class,
+        ]);
+
         // シフトデータは別Seederで大量に作成
         $this->call([
             ShiftsTableSeeder::class,
         ]);
+
+
     }
 }

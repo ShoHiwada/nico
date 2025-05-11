@@ -9,6 +9,7 @@
 <div class="text-xs text-gray-500 uppercase tracking-wider mt-4">📅 シフト</div>
 @if(auth()->user()->is_admin)
     <a href="{{ route('admin.shifts.index') }}" class="block px-6 py-2 hover:bg-gray-100">🛠 シフト作成</a>
+    <a href="{{ route('admin.shifts.night.index') }}" class="block px-6 py-2 hover:bg-gray-100">🌙 夜勤シフト一覧</a>
     <a href="{{ route('admin.shift-requests') }}" class="block px-6 py-2 hover:bg-gray-100">📝 シフト希望一覧</a>
     <a href="{{ route('admin.fixed-shifts.index') }}" class="block px-6 py-2 hover:bg-gray-100">📌 固定シフト管理</a>
 @else
