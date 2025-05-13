@@ -152,7 +152,10 @@ NicoShiftは、「エンジニア目線」でも「現場目線」でも、
 Slackでも以下のように、社長から他職員へ  
 「システム開発の時間を確保してほしい」と声掛けをいただきました：
 
-📸 ![Slack証拠](./docs/slack-screenshot.JPG)
+📸 ![Slack証拠]
+<p align="center">
+  <img src="./docs/slack-screenshot.JPG" width="400">
+</p>
 
 このように、**ただの個人開発ではなく、“実在する法人の課題解決プロジェクト”として認知・支援されている点が、他のポートフォリオとの大きな違い**です。
 
