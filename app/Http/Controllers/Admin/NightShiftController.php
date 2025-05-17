@@ -13,17 +13,25 @@ use Carbon\CarbonPeriod;
 
 class NightShiftController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $nightShiftTypes = ShiftType::where('category', 'night')->get();
-        $users = \App\Models\User::select('id', 'name', 'shift_role')->get();
-        $buildings = Building::all(); // 建物一覧（縦軸）
-        $dates = collect(CarbonPeriod::create('2025-05-01', '2025-05-31'))->map(function ($d) {
+        $year = $request->input('year', now()->year);
+        $month = $request->input('month', now()->month);
+    
+        // 月初〜月末の日付リストを生成
+        $start = now()->setDate($year, $month, 1)->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+    
+        $dates = collect(CarbonPeriod::create($start, $end))->map(function ($d) {
             return [
                 'date' => $d->toDateString(),
                 'dayOfWeek' => $d->dayOfWeek, // 0:日, 6:土
             ];
         });
+    
+        $nightShiftTypes = ShiftType::where('category', 'night')->get();
+        $users = User::select('id', 'name', 'shift_role')->get();
+        $buildings = Building::all();
     
         $baseColors = [
             'red', 'orange', 'amber', 'yellow', 'lime',
@@ -38,10 +46,13 @@ class NightShiftController extends Controller
             $userColors[$user->id] = "bg-{$colorName}-{$shade}";
         }
     
-        // 保存済み夜勤シフト取得
-        $rawShifts = ShiftNight::with('user')->get()->groupBy(['date', 'building_id']);
-        $assignments = [];
+        // 対象月のみ取得
+        $rawShifts = ShiftNight::whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->with('user')
+            ->get()
+            ->groupBy(['date', 'building_id']);
     
+        $assignments = [];
         foreach ($rawShifts as $date => $byBuilding) {
             foreach ($byBuilding as $buildingId => $shifts) {
                 $assignments[$date][$buildingId] = $shifts->map(function ($s) use ($userColors) {
@@ -56,9 +67,18 @@ class NightShiftController extends Controller
         }
     
         return view('admin.shifts.night.index', compact(
-            'nightShiftTypes', 'users', 'buildings', 'dates', 'userColors', 'assignments'
-        ));
+            'nightShiftTypes',
+            'users',
+            'buildings',
+            'dates',
+            'userColors',
+            'assignments'
+        ))->with([
+            'currentYear' => $year,
+            'currentMonth' => $month,
+        ]);
     }
+    
 
     public function store(Request $request)
     {

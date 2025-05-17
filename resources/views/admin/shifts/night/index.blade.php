@@ -3,6 +3,25 @@
 @section('content')
 <h2 class="text-2xl font-bold mb-4">夜勤シフト表</h2>
 
+<div class="flex items-center justify-center gap-4 mb-4">
+    <form method="GET" action="{{ route('admin.shifts.night.index') }}" class="flex items-center gap-2">
+        <input type="hidden" name="year" value="{{ $currentYear }}">
+        <input type="hidden" name="month" value="{{ $currentMonth - 1 }}">
+        <button type="submit" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">←</button>
+    </form>
+
+    <span class="text-xl font-semibold">
+        {{ $currentYear }}年{{ $currentMonth }}月
+    </span>
+
+    <form method="GET" action="{{ route('admin.shifts.night.index') }}" class="flex items-center gap-2">
+        <input type="hidden" name="year" value="{{ $currentYear }}">
+        <input type="hidden" name="month" value="{{ $currentMonth + 1 }}">
+        <button type="submit" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">→</button>
+    </form>
+</div>
+
+
 <div x-data="shiftTable()" class="overflow-x-auto">
     <table class="border-collapse border border-gray-300 w-full text-sm table-auto">
         <thead>
@@ -86,7 +105,7 @@
 <script>
     function shiftTable() {
         return {
-            assignments: @json($assignments),
+            assignments: @json($assignments ?: new stdClass()),
             users: @json($users),
             userColors: @json($userColors),
             selectedUserIds: [],
@@ -129,6 +148,8 @@
             },
 
             submit() {
+                const plainAssignments = JSON.parse(JSON.stringify(this.assignments));
+
                 fetch("{{ route('admin.shifts.night.store') }}", {
                         method: 'POST',
                         headers: {
