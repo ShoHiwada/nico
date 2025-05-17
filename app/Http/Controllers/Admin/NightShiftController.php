@@ -23,8 +23,25 @@ class NightShiftController extends Controller
                 'dayOfWeek' => $d->dayOfWeek, // 0:日, 6:土
             ];
         });
-
-        return view('admin.shifts.night.index', compact('nightShiftTypes', 'users', 'buildings', 'dates'));
-    }
+        
+        $baseColors = [
+            'red', 'orange', 'amber', 'yellow', 'lime',
+            'green', 'emerald', 'teal', 'cyan', 'sky',
+            'blue', 'indigo', 'violet', 'purple', 'fuchsia',
+            'pink', 'rose'
+        ];
+    
+        $userColors = [];
+        $shade = 200;
+    
+        foreach ($users as $i => $user) {
+            $colorName = $baseColors[$i % count($baseColors)];
+            $userColors[$user->id] = "bg-{$colorName}-{$shade}";
+        }
+    
+        return view('admin.shifts.night.index', compact(
+            'nightShiftTypes', 'users', 'buildings', 'dates', 'userColors'
+        ));
+    }    
 }
 
