@@ -4,7 +4,7 @@
 <h2 class="text-2xl font-bold mb-4">夜勤シフト表</h2>
 
 <div x-data="shiftTable()" class="overflow-x-auto">
-<table class="border-collapse border border-gray-300 w-full text-sm table-auto">
+    <table class="border-collapse border border-gray-300 w-full text-sm table-auto">
         <thead>
             <tr>
                 <th class="border p-2 bg-gray-200 min-w-[100px] text-left">建物＼日付</th>
@@ -86,7 +86,7 @@
 <script>
     function shiftTable() {
         return {
-            assignments: {},
+            assignments: @json($assignments),
             users: @json($users),
             userColors: @json($userColors),
             selectedUserIds: [],
@@ -129,9 +129,29 @@
             },
 
             submit() {
-                console.log(JSON.stringify(this.assignments, null, 2));
-                alert('保存処理は未実装です');
+                fetch("{{ route('admin.shifts.night.store') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        },
+                        body: JSON.stringify({
+                            assignments: this.assignments
+                        })
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error('保存に失敗しました');
+                        return res.json();
+                    })
+                    .then(data => {
+                        alert(data.message);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('エラーが発生しました');
+                    });
             }
+
 
         }
     }

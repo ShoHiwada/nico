@@ -50,6 +50,7 @@ Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->grou
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
 
     Route::get('/shifts/night', [NightShiftController::class, 'index'])->name('shifts.night.index');
+    Route::post('/shifts/night/store', [NightShiftController::class, 'store'])->name('shifts.night.store');
 
     Route::get('/fixed-shifts', [FixedShiftController::class, 'index'])->name('fixed-shifts.index');
     Route::post('/fixed-shifts', [FixedShiftController::class, 'store'])->name('fixed-shifts.store');
