@@ -77,7 +77,7 @@
         登録
     </button>
 
-    <!-- ✅ モーダル -->
+    <!--  モーダル -->
     <div x-show="showModal"
         class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
         style="display: none;">
@@ -88,6 +88,10 @@
                 <label class="block">
                     <input type="checkbox" :value="user.id.toString()" x-model="selectedUserIds" class="mr-2">
                     <span x-text="user.name"></span>
+                    <!--  夜勤タイプの希望がある人だけにマーク -->
+                    <template x-if="isNightShiftPreferred(user.id, targetDate)">
+                        <span class="ml-2 text-xs text-red-600 font-semibold">★夜勤希望</span>
+                    </template>
                 </label>
             </template>
 
@@ -105,27 +109,51 @@
 <script>
     function shiftTable() {
         return {
-            assignments: @json($assignments ?: new stdClass()),
+            assignments: @json($assignments ? : new stdClass()),
             users: @json($users),
             userColors: @json($userColors),
+            shiftRequests: @json($shiftRequests),
+            nightShiftTypeIds: @json($nightShiftTypeIds),
+            shiftTypeCategories: @json($shiftTypeCategories),
             selectedUserIds: [],
             targetDate: '',
             targetBuilding: '',
             showModal: false,
             filteredUsers: [],
 
+            formatDate(date) {
+                const d = new Date(date);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            },
+
             editCell(date, buildingId) {
-                this.targetDate = date;
+                this.targetDate = this.formatDate(date);
                 this.targetBuilding = buildingId;
 
                 const existingUsers = this.assignments[date]?.[buildingId] ?? [];
                 this.selectedUserIds = existingUsers.map(u => u.id.toString());
 
+                // 希望ありの夜勤可能職員だけを抽出
+                console.log(this.users)
+                console.log('targetDate', this.targetDate);
+                console.log('shiftRequests on date', this.shiftRequests[this.targetDate]);
                 this.filteredUsers = this.users.filter(user =>
                     user.shift_role === 'night' || user.shift_role === 'both'
                 );
 
                 this.showModal = true;
+            },
+
+            hasNightShiftRequest(userId, date) {
+                return this.shiftRequests?.[date]?.[userId]?.length > 0;
+            },
+
+            isNightShiftPreferred(userId, date) {
+                const ids = this.shiftRequests?.[date]?.[userId] ?? [];
+                return ids.some(id => this.shiftTypeCategories[parseInt(id)] === 'night');
             },
 
             applySelection() {
@@ -172,8 +200,6 @@
                         alert('エラーが発生しました');
                     });
             }
-
-
         }
     }
 </script>
