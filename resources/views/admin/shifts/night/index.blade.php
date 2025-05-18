@@ -151,13 +151,14 @@
 
 @push('scripts')
 <script>
-    window.assignments = @json($assignments ?? []);
+    window.assignments = @json($assignments ?: (object) []);
     window.users = @json($users ?? []);
     window.userColors = @json($userColors ?? []);
     window.shiftRequests = @json($shiftRequests ?? []);
     window.shiftTypeCategories = @json($shiftTypeCategories ?? []);
     window.dates = @json($dates ?? []);
     window.buildings = @json($buildings ?? []);
+    window.storeShiftUrl = @json(route('admin.shifts.night.store'));
 </script>
     @vite(['resources/js/app.js'])
 @endpush

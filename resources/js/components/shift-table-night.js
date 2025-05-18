@@ -34,7 +34,6 @@ export default function () {
         },
 
         editCell(date, buildingId) {
-            console.log('✅ editCell 呼ばれた！', date, buildingId);
             this.targetDate = this.formatDate(date);
             this.targetBuilding = buildingId;
 
@@ -71,14 +70,14 @@ export default function () {
         },
 
         submit() {
-            fetch("/admin/shifts/night/store", {
+            fetch(window.storeShiftUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 },
                 body: JSON.stringify({ assignments: this.assignments })
-            })
+            })            
                 .then(res => res.ok ? res.json() : Promise.reject('保存失敗'))
                 .then(data => alert(data.message))
                 .catch(err => {
