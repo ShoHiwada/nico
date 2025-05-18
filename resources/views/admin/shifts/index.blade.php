@@ -38,24 +38,20 @@
                             </td>
                             @foreach ($days as $day)
                             @php $date = $currentMonth . '-' . str_pad($day, 2, '0', STR_PAD_LEFT); @endphp
-
                             <td
-                                class="relative z-0 border text-center align-middle overflow-hidden p-0"
+                                class="relative z-0 border text-center align-middle p-0"
                                 x-on:click="openModal({{ $user->id }}, '{{ $user->name }}', '{{ $date }}')">
                                 <template x-if="hasShift('{{ $date }}', {{ $user->id }})">
                                     <div
                                         class="absolute z-10 bg-green-200 ring-2 ring-green-500 shadow-md
-                                                flex items-center justify-center text-[10px] text-center leading-tight
-                                                transition-all duration-200 hover:scale-105 whitespace-pre-line"
+                                        flex items-center justify-center text-[10px] text-center leading-tight
+                                        transition-all duration-200 hover:scale-105 whitespace-pre-line"
                                         :class="getShiftClass('{{ $date }}', {{ $user->id }})"
-                                        style="height: 90%; width: 90%; top: 5%; left: 5%; padding: 2px 4px;">
+                                        style="height: 70%; width: 88%; top: 15%; left: 2%; padding: 2px 4px;">
                                         <span x-html="getLabel('{{ $date }}', {{ $user->id }})"></span>
                                     </div>
                                 </template>
-
                             </td>
-
-
                             @endforeach
                         </tr>
                         @endforeach

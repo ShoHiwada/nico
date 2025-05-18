@@ -95,12 +95,10 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}) {
             const hasNext = this.hasShift(this.nextDate(date), userId);
         
             if (!has) return '';
-            if (hasPrev && hasNext) return 'rounded-none';
             if (!hasPrev && !hasNext) return 'rounded-full';
-            if (!hasPrev) return 'rounded-l-full';
-            if (!hasNext) return 'rounded-r-full';
-        
-            return '';
-        }
+            if (!hasPrev && hasNext) return 'rounded-s-full'; // 左だけ
+            if (hasPrev && !hasNext) return 'rounded-e-full'; // 右だけ    
+            return 'rounded-none';
+        }        
     };
 }
