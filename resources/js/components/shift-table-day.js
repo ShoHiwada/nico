@@ -1,4 +1,4 @@
-export default function (typesFromBackend = []) {
+export default function (typesFromBackend = [], shiftsFromBackend = {}) {
     return {
         modalOpen: false,
         selectedUserId: null,
@@ -6,7 +6,19 @@ export default function (typesFromBackend = []) {
         selectedDate: '',
         selectedTypes: [],
         shiftData: {},
+        deletedDates: [],
         shiftTypes: typesFromBackend,
+        initialShiftData: shiftsFromBackend, 
+
+        init() {
+            // 既存のシフト情報をセット
+            for (const date in this.initialShiftData) {
+                this.shiftData[date] = this.shiftData[date] || {};
+                for (const userId in this.initialShiftData[date]) {
+                    this.shiftData[date][userId] = [...this.initialShiftData[date][userId]];
+                }
+            }
+        },
 
         openModal(userId, userName, date) {
             this.selectedUserId = userId;
@@ -19,9 +31,33 @@ export default function (typesFromBackend = []) {
             if (!this.shiftData[this.selectedDate]) {
                 this.shiftData[this.selectedDate] = {};
             }
-            this.shiftData[this.selectedDate][this.selectedUserId] = [...this.selectedTypes];
+        
+            if (this.selectedTypes.length === 0) {
+                // 選択が空なら削除としてマーク
+                delete this.shiftData[this.selectedDate][this.selectedUserId];
+        
+                // ✅ 削除対象として記録（既に追加されていないかチェック）
+                const existing = this.deletedDates.find(
+                    d => d.date === this.selectedDate && d.user_id === this.selectedUserId
+                );
+                if (!existing) {
+                    this.deletedDates.push({
+                        date: this.selectedDate,
+                        user_id: this.selectedUserId
+                    });
+                }
+            } else {
+                // 選択があるなら通常保存
+                this.shiftData[this.selectedDate][this.selectedUserId] = [...this.selectedTypes];
+        
+                // ✅ 削除対象から除外（再登録された場合）
+                this.deletedDates = this.deletedDates.filter(
+                    d => !(d.date === this.selectedDate && d.user_id === this.selectedUserId)
+                );
+            }
+        
             this.modalOpen = false;
-        },
+        },        
         getLabel(date, userId) {
             const types = this.shiftData[date]?.[userId] || [];
             return types.map(id => {

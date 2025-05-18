@@ -14,37 +14,44 @@ class AdminShiftController extends Controller
 {
     public function index()
     {
-        $users = User::all();
+        $users = User::where('is_admin', false)->get();
         $shiftTypes = ShiftType::all();
-
+    
         $month = request('month', now()->format('Y-m'));
         $daysInMonth = Carbon::parse($month)->daysInMonth;
         $days = range(1, $daysInMonth);        
-
-        $shifts = Shift::with(['user', 'shiftType'])->get()
-            ->groupBy(fn($s) => $s->user_id . '_' . $s->date)
-            ->map(function ($group) {
-                $first = $group->first();
-                $types = $group->pluck('shiftType.name')->filter()->unique();
-                $typeText = $types->implode('/');
-
-                return [
-                    'title' => "{$first->user->name}（{$typeText}）",
-                    'start' => $first->date,
-                    'user_id' => $first->user_id,
-                ];
-            })
-            ->values();
-
-            return view('admin.shifts.index', [
-                'users' => $users,
-                'shifts' => $shifts,
-                'shiftTypes' => $shiftTypes,
-                'days' => $days,
-                'currentMonth' => $month, // ←コレも
-            ]);
+    
+        $shifts = Shift::whereBetween('date', [
+                Carbon::parse($month)->startOfMonth(),
+                Carbon::parse($month)->endOfMonth()
+            ])
+            ->get();
+    
+        // ✅ JSで使いやすい形式に変換
+        $initialShifts = [];
+        foreach ($shifts as $shift) {
+            $date = $shift->date;
+            $userId = $shift->user_id;
+            $typeId = $shift->shift_type_id;
+    
+            if (!isset($initialShifts[$date])) {
+                $initialShifts[$date] = [];
+            }
+            if (!isset($initialShifts[$date][$userId])) {
+                $initialShifts[$date][$userId] = [];
+            }
+    
+            $initialShifts[$date][$userId][] = $typeId;
+        }
+    
+        return view('admin.shifts.index', [
+            'users' => $users,
+            'shiftTypes' => $shiftTypes,
+            'days' => $days,
+            'currentMonth' => $month,
+            'initialShiftsJson' => json_encode($initialShifts),
+        ]);
     }
-
 
     public function create(Request $request)
     {
