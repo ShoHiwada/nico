@@ -48,6 +48,7 @@ Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
+    Route::get('/shifts/create', [AdminShiftController::class, 'create'])->name('shifts.create');
 
     Route::get('/shifts/night', [NightShiftController::class, 'index'])->name('shifts.night.index');
     Route::post('/shifts/night/store', [NightShiftController::class, 'store'])->name('shifts.night.store');

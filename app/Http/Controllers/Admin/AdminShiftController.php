@@ -16,14 +16,18 @@ class AdminShiftController extends Controller
     {
         $users = User::all();
         $shiftTypes = ShiftType::all();
-    
+
+        $month = request('month', now()->format('Y-m'));
+        $daysInMonth = Carbon::parse($month)->daysInMonth;
+        $days = range(1, $daysInMonth);        
+
         $shifts = Shift::with(['user', 'shiftType'])->get()
             ->groupBy(fn($s) => $s->user_id . '_' . $s->date)
             ->map(function ($group) {
                 $first = $group->first();
                 $types = $group->pluck('shiftType.name')->filter()->unique();
                 $typeText = $types->implode('/');
-    
+
                 return [
                     'title' => "{$first->user->name}（{$typeText}）",
                     'start' => $first->date,
@@ -31,16 +35,40 @@ class AdminShiftController extends Controller
                 ];
             })
             ->values();
+
+            return view('admin.shifts.index', [
+                'users' => $users,
+                'shifts' => $shifts,
+                'shiftTypes' => $shiftTypes,
+                'days' => $days,
+                'currentMonth' => $month, // ←コレも
+            ]);
+    }
+
+
+    public function create(Request $request)
+    {
+        $year = $request->query('year', now()->year);
+        $month = str_pad($request->query('month', now()->month), 2, '0', STR_PAD_LEFT);
+        $ym = $year . '-' . $month;
     
-        return view('admin.shifts.index', compact('users', 'shifts', 'shiftTypes'));
+        $days = range(1, Carbon::parse($ym)->daysInMonth);
+    
+        return view('admin.shifts.index', [
+            'users' => User::where('is_admin', false)->get(),
+            'shiftTypes' => ShiftType::all(),
+            'days' => $days,
+            'currentMonth' => $ym,
+        ]);
     }
     
+
 
     public function store(Request $request)
     {
         $shifts = $request->input('shifts', []);
         $deletedDates = $request->input('deleted_dates', []);
-    
+
         // 1. 登録・更新
         foreach ($shifts as $date => $userData) {
             foreach ($userData as $userId => $typeIds) {
@@ -58,27 +86,27 @@ class AdminShiftController extends Controller
                 }
             }
         }
-    
+
         // 2. 削除
         $deletedDates = $request->input('deleted_dates', []);
 
         foreach ($deletedDates as $json) {
             $delete = json_decode($json, true);
-        
+
             if (!is_array($delete) || !isset($delete['date'], $delete['user_id'])) {
                 continue;
             }
-        
+
             Shift::where('date', $delete['date'])
                 ->where('user_id', $delete['user_id'])
                 ->delete();
         }
-        
-    
+
+
         return redirect()->route('admin.shifts.index')->with('success', 'シフトを保存しました');
     }
-    
-    
+
+
 
     // 固定シフト反映
     public function applyFixed(Request $request)

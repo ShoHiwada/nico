@@ -1,377 +1,81 @@
 @extends('layouts.app')
 
 @section('content')
-<!-- 成功メッセージ -->
-@if (session('success'))
-<div class="mb-4 px-4 py-2 bg-green-100 text-green-800 border border-green-300 rounded">
-    {!! session('success') !!}
-</div>
-@endif
+<h2 class="text-2xl font-bold mb-4">シフト作成（表形式）</h2>
 
+<form method="POST" action="{{ route('admin.shifts.store') }}">
+    @csrf
 
-<!-- エラーメッセージ -->
-@if(session('error'))
-<div class="mb-4 px-4 py-2 bg-red-100 text-red-800 border border-red-300 rounded">
-    {{ session('error') }}
-</div>
-@endif
-
-<!-- バリデーション複数エラー対応 -->
-@if ($errors->any())
-<div class="mb-4 px-4 py-2 bg-red-100 text-red-800 border border-red-300 rounded">
-    <ul class="list-disc list-inside">
-        @foreach ($errors->all() as $error)
-        <li>{{ $error }}</li>
-        @endforeach
-    </ul>
-</div>
-@endif
-
-
-<div class="mb-4">
-    <label class="block mb-1 font-medium">対象職員</label>
-    <select id="user-filter" class="form-select w-1/3">
-        <option value="all">全員</option>
-        @foreach ($users as $user)
-        <option value="{{ $user->id }}">{{ $user->name }}</option>
-        @endforeach
-    </select>
-</div>
-
-<div class="max-w-5xl mx-auto px-4">
-    <div id="calendar"></div>
-</div>
-
-<!-- 職員・勤務タイプ選択モーダル -->
-<div id="shiftTypeModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white p-6 rounded shadow w-96">
-        <h3 class="text-lg font-semibold mb-4">職員・勤務タイプを選択</h3>
-
-        <div class="mb-4">
-            <label class="block mb-1 font-medium">職員</label>
-            <select id="form-user-select" name="modal_user_id" multiple class="w-full border rounded px-3 py-2">
+    <div x-data="shiftTableDay({{ $shiftTypes->toJson() }})" class="overflow-x-auto relative">
+        <table class="table-auto border-collapse w-full text-sm">
+            <thead>
+                <tr>
+                    <th class="sticky left-0 z-20 bg-gray-200 px-4 py-2">職員名</th>
+                    @foreach ($days as $day)
+                        @php
+                            $dateObj = \Carbon\Carbon::parse("{$currentMonth}-" . str_pad($day, 2, '0', STR_PAD_LEFT));
+                            $w = ['日','月','火','水','木','金','土'][$dateObj->dayOfWeek];
+                            $cls = match($dateObj->dayOfWeek) {
+                                0 => 'text-red-600',
+                                6 => 'text-blue-600',
+                                default => 'text-gray-600',
+                            };
+                        @endphp
+                        <th class="px-2 py-1 text-center bg-gray-100">
+                            {{ $day }}<br><span class="text-xs {{ $cls }}">({{ $w }})</span>
+                        </th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody>
                 @foreach ($users as $user)
-                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    <tr>
+                        <td class="sticky left-0 z-10 bg-gray-50 px-4 py-2 font-semibold text-base whitespace-nowrap">
+                            {{ $user->name }}
+                        </td>
+                        @foreach ($days as $day)
+                            @php $date = $currentMonth . '-' . str_pad($day, 2, '0', STR_PAD_LEFT); @endphp
+                            <td class="border px-2 py-1 text-center cursor-pointer hover:bg-blue-100"
+                                x-on:click="openModal({{ $user->id }}, '{{ $user->name }}', '{{ $date }}')">
+                                <span x-text="getLabel('{{ $date }}', {{ $user->id }})"></span>
+                            </td>
+                        @endforeach
+                    </tr>
                 @endforeach
-            </select>
-        </div>
+            </tbody>
+        </table>
 
-        <div class="mb-4">
-            <label class="block mb-1 font-medium">勤務タイプ</label>
-            @foreach ($shiftTypes as $type)
-                <label class="block">
-                    <input type="checkbox" name="modal_shift_types[]" value="{{ $type->id }}" class="mr-1">
-                    {{ $type->name }}
-                </label>
-            @endforeach
-        </div>
+        <!-- Hidden input自動生成 -->
+        <template x-for="(userShifts, date) in shiftData" :key="date">
+            <template x-for="(types, userId) in userShifts" :key="userId">
+                <template x-for="typeId in types" :key="typeId">
+                    <input type="hidden" :name="`shifts[${date}][${userId}][]`" :value="typeId">
+                </template>
+            </template>
+        </template>
 
-        <div class="flex justify-end space-x-2">
-            <button type="button" id="cancelShiftModal" class="px-3 py-1 border rounded">キャンセル</button>
-            <button type="button" id="registerShift" class="bg-blue-600 text-white px-4 py-2 rounded">登録</button>
+        <!-- モーダル -->
+        <div x-show="modalOpen" x-cloak class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white p-6 rounded shadow w-96" @click.away="modalOpen = false">
+                <h3 class="text-lg font-bold mb-2" x-text="selectedUserName + ' - ' + selectedDate"></h3>
+                <template x-for="type in shiftTypes" :key="type.id">
+                    <label class="block mb-1">
+                        <input type="checkbox" :value="type.id" x-model="selectedTypes" class="mr-1">
+                        <span x-text="type.name"></span>
+                    </label>
+                </template>
+                <div class="text-right space-x-2 mt-4">
+                    <button type="button" @click="selectedTypes = []" class="px-3 py-1 border rounded">クリア</button>
+                    <button type="button" @click="saveSelection()" class="bg-blue-600 text-white px-4 py-2 rounded">登録</button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-
-
-<!-- 固定シフトを反映 -->
-<div class="mt-6 p-4 bg-white rounded shadow">
-    <h2 class="text-lg font-bold mb-2">固定シフトを反映</h2>
-
-    <form method="POST" action="{{ route('admin.shifts.apply-fixed') }}">
-        @csrf
-        <input type="hidden" name="month" value="{{ request()->query('month', now()->format('Y-m')) }}">
-
-        <div class="mb-4">
-            <label class="block font-medium mb-1">対象職員（複数選択可）</label>
-            <select id="fixed-user-select" name="user_ids[]" multiple size="6" class="w-full border px-3 py-2 rounded">
-                @foreach ($users as $user)
-                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            選択した職員の固定シフトを反映
-        </button>
-    </form>
-</div>
-
-<!-- 希望シフトを反映 -->
-<div class="mt-6 p-4 bg-white rounded shadow">
-    <h2 class="text-lg font-bold mb-2">希望シフトを反映</h2>
-
-    <form method="POST" action="{{ route('admin.shifts.apply-requests') }}">
-        @csrf
-        <input type="hidden" name="month" value="{{ request()->query('month', now()->format('Y-m')) }}">
-
-        <div class="mb-4">
-            <label class="block font-medium mb-1">対象職員（複数選択可）</label>
-            <select id="user-select" name="user_ids[]" multiple size="6" class="w-full border px-3 py-2 rounded">
-                @foreach ($users as $user)
-                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-            選択した職員の希望を反映
-        </button>
-    </form>
-</div>
-
-<!-- 登録フォーム -->
-<form id="shift-form" method="POST" action="{{ route('admin.shifts.store') }}">
-    @csrf
-    <div id="date-inputs"></div>
 
     <div class="mt-4 text-right">
-        <button type="button" id="submitShift" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            確定して登録する
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            登録する
         </button>
     </div>
 </form>
-
 @endsection
-
-@push('styles')
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-@endpush
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-
-<script>
-    let shiftDateTarget = null;
-    let shiftData = {}; // 例: { "2025-06-01": [1, 3] }
-    let deletedDates = [];
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // FullCalendar
-        const calendarEl = document.getElementById('calendar');
-        const dateInput = document.getElementById('date-input');
-        const userFilter = document.getElementById('user-filter');
-        const allEvents = @json($shifts);
-
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'ja',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,listWeek,listMonth'
-            },
-            views: {
-                dayGridMonth: {
-                    buttonText: 'カレンダー'
-                },
-                listWeek: {
-                    buttonText: '表（週）'
-                },
-                listMonth: {
-                    buttonText: '表（月）'
-                }
-            },
-            events: function(fetchInfo, successCallback) {
-                const selectedUserId = userFilter.value;
-                let filtered = allEvents;
-
-                if (selectedUserId !== 'all') {
-                    filtered = allEvents.filter(e => e.user_id == selectedUserId);
-                }
-
-                successCallback(filtered);
-            },
-            dateClick: function(info) {
-                shiftDateTarget = info.dateStr;
-
-                // チェックボックスをリセット
-                document.querySelectorAll('input[name="modal_shift_types[]"]').forEach(cb => {
-                    cb.checked = false;
-                });
-
-                // すでに登録済みなら再チェック
-                if (shiftData[shiftDateTarget]) {
-                    shiftData[shiftDateTarget].forEach(id => {
-                        document.querySelector(`input[name="modal_shift_types[]"][value="${id}"]`)?.click();
-                    });
-                }
-
-                document.getElementById('shiftTypeModal').classList.remove('hidden');
-            }
-        });
-
-        calendar.render();
-
-        // イベントクリックで削除
-        calendar.setOption('eventClick', function(info) {
-            const event = info.event;
-            const date = event.startStr;
-            const userId = event.extendedProps.user_id;
-
-            if (!confirm('このシフトを削除しますか？')) return;
-
-            // deletedDates に追加（重複防止あり）
-            if (!alreadyDeleted(date, userId)) {
-                deletedDates.push({ date, user_id: userId });
-            }
-
-            // shiftData からも削除
-            if (shiftData[date] && shiftData[date][userId]) {
-                delete shiftData[date][userId];
-
-                if (Object.keys(shiftData[date]).length === 0) {
-                    delete shiftData[date];
-                }
-            }
-
-            // カレンダーからイベント削除
-            event.remove();
-            // hidden input 再構築
-            updateShiftInputs();
-        });
-
-
-        const shiftTypeNames = @json($shiftTypes->pluck('name', 'id'));
-
-        document.getElementById('registerShift').addEventListener('click', () => {
-            const selectedUserIds = formUserSelect.getValue(); // TomSelect対応：複数取得
-            const checkboxes = document.querySelectorAll('input[name="modal_shift_types[]"]:checked');
-            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
-
-            if (shiftDateTarget && selectedUserIds.length > 0 && selectedIds.length > 0) {
-                selectedUserIds.forEach(userId => {
-                    if (!shiftData[shiftDateTarget]) {
-                        shiftData[shiftDateTarget] = {};
-                    }
-                    if (!shiftData[shiftDateTarget][userId]) {
-                        shiftData[shiftDateTarget][userId] = [];
-                    }
-
-                    selectedIds.forEach(id => {
-                        if (!shiftData[shiftDateTarget][userId].includes(id)) {
-                            shiftData[shiftDateTarget][userId].push(id);
-                        }
-                    });
-
-                    // 既存イベント削除（同日・同ユーザー）
-                    calendar.getEvents().forEach(event => {
-                        if (
-                            event.startStr === shiftDateTarget &&
-                            event.extendedProps.temp &&
-                            event.extendedProps.user_id === userId
-                        ) {
-                            event.remove();
-                        }
-                    });
-
-                    // イベント追加
-                    const userName = document.querySelector(`#form-user-select option[value="${userId}"]`)?.textContent || '未選択';
-                    const shiftTypeLabels = selectedIds.map(id => shiftTypeNames[id]).join('/');
-
-                    calendar.addEvent({
-                        title: `${userName}：${shiftTypeLabels}`,
-                        start: shiftDateTarget,
-                        allDay: true,
-                        backgroundColor: '#ffffff',
-                        textColor: '#000000',
-                        extendedProps: {
-                            temp: true,
-                            user_id: userId
-                        }
-                    });
-                });
-            }
-
-            formUserSelect.clear();
-            document.querySelectorAll('input[name="modal_shift_types[]"]').forEach(cb => cb.checked = false);
-
-            document.getElementById('shiftTypeModal').classList.add('hidden');
-        });
-
-
-        function updateShiftInputs() {
-            const form = document.getElementById('shift-form');
-            form.querySelectorAll('input[name^="shifts["], input[name="deleted_dates[]"]').forEach(el => el.remove());
-
-            for (const [date, users] of Object.entries(shiftData)) {
-                for (const [userId, shiftTypeIds] of Object.entries(users)) {
-                    shiftTypeIds.forEach(id => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = `shifts[${date}][${userId}][]`;
-                        input.value = id;
-                        form.appendChild(input);
-                    });
-                }
-            }
-
-            deletedDates.forEach(({ date, user_id }) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'deleted_dates[]';
-                input.value = JSON.stringify({ date, user_id });
-                form.appendChild(input);
-            });
-
-            console.log('削除予定:', deletedDates);
-
-        }
-
-
-        // 勤務タイプモーダル キャンセルボタン
-        document.getElementById('cancelShiftModal').addEventListener('click', () => {
-            document.getElementById('shiftTypeModal').classList.add('hidden');
-        });
-
-        // Select 共通関数化
-        let formUserSelect, userSelect, fixedUserSelect;
-
-        userFilter.addEventListener('change', function() {
-            calendar.refetchEvents();
-        });
-
-        function initTomSelectWithToggle(selector) {
-            const element = document.querySelector(selector);
-            if (!element) return null;
-
-            const instance = new TomSelect(selector, {
-                plugins: ['remove_button'],
-                maxItems: null,
-                placeholder: '職員を選んでください',
-            });
-
-            element.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                const option = e.target;
-                if (option.tagName.toLowerCase() === 'option') {
-                    option.selected = !option.selected;
-                    element.dispatchEvent(new Event('change'));
-                }
-            });
-
-            return instance;
-        }
-
-
-        formUserSelect = initTomSelectWithToggle('#form-user-select');
-        userSelect = initTomSelectWithToggle('#user-select');
-        fixedUserSelect = initTomSelectWithToggle('#fixed-user-select');
-
-
-        // 仮登録ボタン
-        document.getElementById('submitShift').addEventListener('click', function() {
-            updateShiftInputs();
-            document.getElementById('shift-form').submit();
-        });
-
-        // 重複削除防止用
-        function alreadyDeleted(date, userId) {
-            return deletedDates.some(item => item.date === date && item.user_id === userId);
-        }
-    });
-</script>
-@endpush
