@@ -30,8 +30,6 @@ class NightShiftController extends Controller
             ];
         });
 
-        $nightShiftTypes = ShiftType::where('category', 'night')->get();
-        $nightShiftTypeIds = $nightShiftTypes->pluck('id')->map(fn($id) => (string)$id)->toArray();
         $shiftTypeCategories = ShiftType::pluck('category', 'id')->toArray();
 
 
@@ -106,14 +104,12 @@ class NightShiftController extends Controller
         }
 
         return view('admin.shifts.night.index', compact(
-            'nightShiftTypes',
             'users',
             'buildings',
             'dates',
             'userColors',
             'assignments',
             'shiftRequests',
-            'nightShiftTypeIds',
             'shiftTypeCategories',
             'start',
             'end',

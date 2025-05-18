@@ -113,7 +113,6 @@
             users: @json($users),
             userColors: @json($userColors),
             shiftRequests: @json($shiftRequests),
-            nightShiftTypeIds: @json($nightShiftTypeIds),
             shiftTypeCategories: @json($shiftTypeCategories),
             selectedUserIds: [],
             targetDate: '',
@@ -137,18 +136,11 @@
                 this.selectedUserIds = existingUsers.map(u => u.id.toString());
 
                 // 希望ありの夜勤可能職員だけを抽出
-                console.log(this.users)
-                console.log('targetDate', this.targetDate);
-                console.log('shiftRequests on date', this.shiftRequests[this.targetDate]);
                 this.filteredUsers = this.users.filter(user =>
                     user.shift_role === 'night' || user.shift_role === 'both'
                 );
 
                 this.showModal = true;
-            },
-
-            hasNightShiftRequest(userId, date) {
-                return this.shiftRequests?.[date]?.[userId]?.length > 0;
             },
 
             isNightShiftPreferred(userId, date) {
@@ -171,8 +163,6 @@
                 }
                 this.assignments[this.targetDate][this.targetBuilding] = selected;
                 this.showModal = false;
-                console.log(this.assignments); // ✅ OK: Alpine の data にある assignments を参照
-
             },
 
             submit() {
