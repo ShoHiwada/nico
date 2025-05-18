@@ -77,6 +77,51 @@
         登録
     </button>
 
+    <div class="mb-6 p-4 border border-gray-300 rounded bg-gray-50">
+        <h3 class="text-lg font-semibold mb-2">🛠 スコア設定（管理者用）</h3>
+
+        <template x-for="(option, key) in scoreOptions" :key="key">
+            <div class="flex items-center gap-4 mb-2">
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" x-model="option.enabled">
+                    <span x-text="labelMap[key]"></span>
+                </label>
+                <input type="number" class="border px-2 py-1 w-20 text-sm" x-model.number="option.value">
+            </div>
+        </template>
+    </div>
+
+    <!-- ⭐ 優先職員設定（トグル＋夜勤者のみ） -->
+    <div class="mt-4 border-t pt-4">
+        <button type="button"
+            x-on:click="showPrioritySettings = !showPrioritySettings"
+            class="text-sm text-blue-600 hover:underline mb-2">
+            <span x-show="!showPrioritySettings">▶ 優先/控え職員の設定を開く</span>
+            <span x-show="showPrioritySettings">▼ 優先/控え職員の設定を閉じる</span>
+        </button>
+
+        <div x-show="showPrioritySettings" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <template x-for="user in users.filter(u => u.shift_role === 'night' || u.shift_role === 'both')" :key="user.id">
+                <div class="flex items-center gap-2 text-sm">
+                    <span class="w-24 truncate" x-text="user.name"></span>
+                    <select x-model="userFlags[user.id]" class="border rounded px-2 py-1 text-sm">
+                        <option value="">なし</option>
+                        <option value="high">⭐ 優先</option>
+                        <option value="low">⚠ 控え</option>
+                    </select>
+                </div>
+            </template>
+        </div>
+    </div>
+
+
+    <button
+        class="mb-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        x-on:click="assignAutomatically">
+        自動割当（希望者から）
+    </button>
+
+
     <!--  モーダル -->
     <div x-show="showModal"
         class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
@@ -114,11 +159,15 @@
             userColors: @json($userColors),
             shiftRequests: @json($shiftRequests),
             shiftTypeCategories: @json($shiftTypeCategories),
+            dates: @json($dates), // スコア
+            buildings: @json($buildings), // スコア
             selectedUserIds: [],
             targetDate: '',
             targetBuilding: '',
             showModal: false,
             filteredUsers: [],
+            showPrioritySettings: false,
+            userFlags: {}, // 優先・控えを記録
 
             formatDate(date) {
                 const d = new Date(date);
@@ -189,7 +238,205 @@
                         console.error(err);
                         alert('エラーが発生しました');
                     });
+            },
+
+            // 自動割り当てスコア処理
+
+            // デバッグログ
+            logCandidateScores(date, buildingName, candidates) {
+                console.log(`📅 日付: ${date}`);
+                console.log(`🏢 建物: ${buildingName}`);
+
+                if (candidates.length === 0) {
+                    console.log("⚠ 希望者なし");
+                    return;
+                }
+
+                candidates.forEach((u, i) => {
+                    console.log(`  ${i + 1}. ${u.name}（ID:${u.id}）→ スコア: ${u.score}`);
+                });
+            },
+
+            withScoreLog(callback) {
+                console.log("=== 🧠 自動割当スコアログ START ===");
+                callback(); // 中で assign 処理する
+                console.log("=== 🧠 自動割当スコアログ END ===");
+            },
+
+            // スコア処理
+            assignAutomatically() {
+                // 夜勤希望があるかのチェック
+                const isNightPreferred = (userId, date) => {
+                    const ids = this.shiftRequests?.[date]?.[userId] ?? [];
+                    return ids.some(id => this.shiftTypeCategories[parseInt(id)] === 'night');
+                };
+                // 同日で他建物に割当済のユーザーは除外
+                const isAlreadyAssignedToday = (userId, date) => {
+                    return Object.values(this.assignments?.[date] || {}).some(users =>
+                        users.some(u => u.id === userId)
+                    );
+                };
+
+
+                for (const dateObj of this.dates) {
+                    const date = dateObj.date;
+
+                    for (const building of this.buildings) {
+                        const buildingId = building.id;
+                        const buildingName = building.name || `ID:${building.id}`;
+
+                        // 既に割当がある場合はスキップ
+                        if (this.assignments[date]?.[buildingId]) continue;
+
+                        // 希望者の中からスコア算出
+                        const candidates = this.users
+                            .filter(user => {
+                                return (
+                                    (user.shift_role === 'night' || user.shift_role === 'both') &&
+                                    isNightPreferred(user.id, date) &&
+                                    !isAlreadyAssignedToday(user.id, date)
+                                );
+                            })
+                            .map(user => {
+                                const score = this.calculateScore(user.id, date);
+                                return {
+                                    ...user,
+                                    score
+                                };
+                            })
+                            .sort((a, b) => b.score - a.score);
+
+                        // this.logCandidateScores(date, buildingName, candidates); //デバッグログ
+
+                        // 上位1名のみ割当（必要なら2名に変更可）
+                        const selected = candidates.slice(0, 1).map(user => ({
+                            id: user.id,
+                            name: user.name,
+                            shift_role: user.shift_role,
+                            color: this.userColors[user.id] || 'bg-gray-200'
+                        }));
+
+                        if (!this.assignments[date]) this.assignments[date] = {};
+                        this.assignments[date][buildingId] = selected;
+                    }
+                }
+
+                alert("希望者ベースで自動割当を実行しました！");
+            },
+
+            scoreOptions: {
+                nightPreferred: {
+                    enabled: true,
+                    value: 10
+                },
+                fewRequests: {
+                    enabled: true,
+                    value: 5
+                },
+                bothRole: {
+                    enabled: true,
+                    value: 3
+                },
+                consecutive: {
+                    enabled: true,
+                    value: -10
+                },
+                tooManyAssignments: {
+                    enabled: true,
+                    value: -5
+                },
+                workedYesterday: {
+                    enabled: false,
+                    value: -3
+                },
+                hasNoAssignmentYet: {
+                    enabled: false,
+                    value: 4
+                },
+                isHighPriorityUser: {
+                    enabled: false,
+                    value: 10
+                },
+                isLowPriorityUser: {
+                    enabled: false,
+                    value: -10
+                },
+            },
+            labelMap: {
+                nightPreferred: "★ 夜勤希望あり",
+                fewRequests: "📉 希望が少ない（月3日以下）",
+                bothRole: "🌀 両対応職員（both）",
+                consecutive: "❗ 連勤になる日（前日または翌日に夜勤が入ってる）",
+                tooManyAssignments: "⚠ 月4回以上入っている",
+                workedYesterday: "🔁 前日に夜勤がある",
+                hasNoAssignmentYet: "🆕 今月まだ夜勤に入っていない",
+                isHighPriorityUser: "⭐ 優先配置職員",
+                isLowPriorityUser: "⚠ 配置を控えたい職員",
+            },
+
+            applyScoreOption(key, condition) {
+                const option = this.scoreOptions[key];
+                if (option?.enabled && condition) {
+                    return option.value;
+                }
+                return 0;
+            },
+
+            calculateScore(userId, date) {
+                const shiftRole = this.users.find(u => u.id === userId)?.shift_role || 'day';
+                const totalRequestCount = Object.values(this.shiftRequests || {}).reduce((sum, day) => {
+                    return sum + (day[userId]?.length || 0);
+                }, 0);
+
+                const getRelativeDate = (d, offset) => {
+                    const dateObj = new Date(d);
+                    dateObj.setDate(dateObj.getDate() + offset);
+                    return dateObj.toISOString().slice(0, 10);
+                };
+
+                const isPrevAssigned = Object.values(this.assignments[getRelativeDate(date, -1)] || {}).some(users =>
+                    users.some(u => u.id === userId)
+                );
+                const isNextAssigned = Object.values(this.assignments[getRelativeDate(date, 1)] || {}).some(users =>
+                    users.some(u => u.id === userId)
+                );
+                const isTwoDaysAgoAssigned = Object.values(this.assignments[getRelativeDate(date, -2)] || {}).some(users =>
+                    users.some(u => u.id === userId)
+                );
+
+                const assignedCount = Object.values(this.assignments || {}).reduce((sum, day) => {
+                    return sum + Object.values(day).reduce((innerSum, users) =>
+                        innerSum + users.filter(u => u.id === userId).length, 0
+                    );
+                }, 0);
+
+                const candidateCountToday = this.users.filter(user =>
+                    (user.shift_role === 'night' || user.shift_role === 'both') &&
+                    this.shiftRequests?.[date]?.[user.id]
+                ).length;
+
+                const isNightPreferred = this.isNightShiftPreferred(userId, date);
+
+                // 高低優先職員のフラグ（任意で追加）
+                const priority = this.userFlags?.[userId]; // ex: { 101: "high", 102: "low" }
+
+                let score = 0;
+
+                score += this.applyScoreOption('nightPreferred', isNightPreferred);
+                score += this.applyScoreOption('fewRequests', totalRequestCount <= 3);
+                score += this.applyScoreOption('bothRole', shiftRole === 'both');
+                score += this.applyScoreOption('consecutive', isPrevAssigned || isNextAssigned);
+                score += this.applyScoreOption('tooManyAssignments', assignedCount >= 4);
+                score += this.applyScoreOption('workedYesterday', isPrevAssigned);
+                score += this.applyScoreOption('workedTwoDaysAgo', isTwoDaysAgoAssigned);
+                score += this.applyScoreOption('hasNoAssignmentYet', assignedCount === 0);
+                score += this.applyScoreOption('fewCandidatesToday', candidateCountToday <= 2);
+                score += this.applyScoreOption('isHighPriorityUser', priority === 'high');
+                score += this.applyScoreOption('isLowPriorityUser', priority === 'low');
+
+                return score;
             }
+
         }
     }
 </script>
