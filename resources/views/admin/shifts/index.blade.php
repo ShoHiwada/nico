@@ -7,43 +7,62 @@
     @csrf
 
     <div x-data="shiftTableDay({{ $shiftTypes->toJson() }}, {{ $initialShiftsJson }})" class="overflow-x-auto relative">
-        <table class="table-auto border-collapse w-full text-sm">
-            <thead>
-                <tr>
-                    <th class="sticky left-0 z-20 bg-gray-200 px-4 py-2">職員名</th>
-                    @foreach ($days as $day)
-                    @php
-                    $dateObj = \Carbon\Carbon::parse("{$currentMonth}-" . str_pad($day, 2, '0', STR_PAD_LEFT));
-                    $w = ['日','月','火','水','木','金','土'][$dateObj->dayOfWeek];
-                    $cls = match($dateObj->dayOfWeek) {
-                    0 => 'text-red-600',
-                    6 => 'text-blue-600',
-                    default => 'text-gray-600',
-                    };
-                    @endphp
-                    <th class="px-2 py-1 text-center bg-gray-100">
-                        {{ $day }}<br><span class="text-xs {{ $cls }}">({{ $w }})</span>
-                    </th>
-                    @endforeach
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($users as $user)
-                <tr>
-                    <td class="sticky left-0 z-10 bg-gray-50 px-4 py-2 font-semibold text-base whitespace-nowrap">
-                        {{ $user->name }}
-                    </td>
-                    @foreach ($days as $day)
-                    @php $date = $currentMonth . '-' . str_pad($day, 2, '0', STR_PAD_LEFT); @endphp
-                    <td class="border px-2 py-1 text-center cursor-pointer hover:bg-blue-100"
-                        x-on:click="openModal({{ $user->id }}, '{{ $user->name }}', '{{ $date }}')">
-                        <span x-text="getLabel('{{ $date }}', {{ $user->id }})"></span>
-                    </td>
-                    @endforeach
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+
+        <div class="w-full overflow-x-auto">
+            <div class="max-w-[1024px] mx-auto">
+                <table class="table-auto border-collapse w-full text-xs">
+                    <thead>
+                        <tr>
+                            <th class="sticky left-0 z-20 bg-gray-200 px-4 py-2">職員名</th>
+                            @foreach ($days as $day)
+                            @php
+                            $dateObj = \Carbon\Carbon::parse("{$currentMonth}-" . str_pad($day, 2, '0', STR_PAD_LEFT));
+                            $w = ['日','月','火','水','木','金','土'][$dateObj->dayOfWeek];
+                            $cls = match($dateObj->dayOfWeek) {
+                            0 => 'text-red-600',
+                            6 => 'text-blue-600',
+                            default => 'text-gray-600',
+                            };
+                            @endphp
+                            <th class="px-2 py-1 text-center bg-gray-100">
+                                {{ $day }}<br><span class="text-xs {{ $cls }}">({{ $w }})</span>
+                            </th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($users as $user)
+                        <tr>
+                            <td class="sticky left-0 z-10 bg-gray-50 px-4 py-2 font-semibold text-base whitespace-nowrap">
+                                {{ $user->name }}
+                            </td>
+                            @foreach ($days as $day)
+                            @php $date = $currentMonth . '-' . str_pad($day, 2, '0', STR_PAD_LEFT); @endphp
+
+                            <td
+                                class="relative z-0 border text-center align-middle overflow-hidden p-0"
+                                x-on:click="openModal({{ $user->id }}, '{{ $user->name }}', '{{ $date }}')">
+                                <template x-if="hasShift('{{ $date }}', {{ $user->id }})">
+                                    <div
+                                        class="absolute z-10 bg-green-200 ring-2 ring-green-500 shadow-md
+                                                flex items-center justify-center text-[10px] text-center leading-tight
+                                                transition-all duration-200 hover:scale-105 whitespace-pre-line"
+                                        :class="getShiftClass('{{ $date }}', {{ $user->id }})"
+                                        style="height: 90%; width: 90%; top: 5%; left: 5%; padding: 2px 4px;">
+                                        <span x-html="getLabel('{{ $date }}', {{ $user->id }})"></span>
+                                    </div>
+                                </template>
+
+                            </td>
+
+
+                            @endforeach
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
         <!-- shiftDataから送信 -->
         <template x-for="(userShifts, date) in shiftData" :key="date">
