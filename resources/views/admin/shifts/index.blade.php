@@ -102,10 +102,17 @@
         </template>
 
         <div class="mt-4 flex justify-between items-center">
-            <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                @click="reflectShiftRequests" :disabled="selectedUserIds.length === 0">
-                希望シフトを反映（対象: <span x-text="selectedUserIds.length"></span> 名）
-            </button>
+            <div class="space-x-2">
+                <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                    @click="reflectShiftRequests" :disabled="selectedUserIds.length === 0">
+                    希望シフトを反映（対象: <span x-text="selectedUserIds.length"></span> 名）
+                </button>
+
+                <button type="button" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+                    @click="reflectFixedShifts" :disabled="selectedUserIds.length === 0">
+                    固定シフトを反映（対象: <span x-text="selectedUserIds.length"></span> 名）
+                </button>
+            </div>
 
             <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
                 登録する

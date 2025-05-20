@@ -54,6 +54,7 @@ Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/shifts/fetch', [AdminShiftController::class, 'fetchShifts']);
     Route::get('/api/shift-types', function () { return \App\Models\ShiftType::select('id', 'name', 'category', 'start_time', 'end_time')->get();});
     Route::get('/api/shift-requests', [AdminShiftRequestController::class, 'apiIndex']);
+    Route::get('/api/fixed-shifts', [FixedShiftController::class, 'apiIndex']);
 
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');

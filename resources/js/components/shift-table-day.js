@@ -131,6 +131,57 @@ export default function (currentMonthStr = '', daysArray = []) {
             return `${this.currentMonth}-${String(day).padStart(2, '0')}`;
         },
 
+        // 固定シフト反映
+        async reflectFixedShifts() {
+            if (this.selectedUserIds.length === 0) {
+                alert("対象者が選択されていません。");
+                return;
+            }
+        
+            const params = new URLSearchParams();
+            this.selectedUserIds.forEach(id => params.append('user_ids[]', id));
+        
+            try {
+                const res = await fetch(`/admin/api/fixed-shifts?${params}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+        
+                const data = await res.json();
+                console.log("📦 固定シフトデータ:", data);
+        
+                data.forEach(({ user_id, week_patterns }) => {
+                    const parsed = typeof week_patterns === 'string'
+                        ? JSON.parse(week_patterns)
+                        : week_patterns;
+        
+                    for (const week in parsed) {
+                        for (const dow in parsed[week]) {
+                            const typeIds = parsed[week][dow].map(Number);
+                            const date = this.resolveDateFromWeekAndDow(Number(week), Number(dow));
+        
+                            if (!this.shiftData[date]) this.shiftData[date] = {};
+                            this.shiftData[date][user_id] = [...typeIds];
+                        }
+                    }
+                });
+        
+                alert(`固定シフトを反映しました（${this.selectedUserIds.length}名）`);
+                console.log("✅ shiftData after fixed:", this.shiftData);
+        
+            } catch (e) {
+                console.error("❌ 固定シフト取得エラー:", e);
+                alert("固定シフトの取得に失敗しました。");
+            }
+        },
+        
+        resolveDateFromWeekAndDow(week, dow) {
+            const base = new Date(`${this.currentMonth}-01`);
+            const startDow = base.getDay();
+            const offset = (week - 1) * 7 + ((dow + 7 - startDow) % 7);
+            base.setDate(base.getDate() + offset);
+            return base.toISOString().slice(0, 10);
+        },        
+
         openModal(userId, userName, date) {
             this.selectedUserId = userId;
             this.selectedUserName = userName;

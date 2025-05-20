@@ -74,4 +74,16 @@ class FixedShiftController extends Controller
             ->with('success', "{$userName}さんの固定シフトを登録しました");
         
     }    
+
+    public function apiIndex(Request $request)
+    {
+        $query = ShiftsFixed::query();
+
+        if ($request->has('user_ids')) {
+            $query->whereIn('user_id', $request->user_ids);
+        }
+
+        return response()->json($query->get(['user_id', 'week_patterns', 'start_date', 'end_date']));
+    }
+
 }
