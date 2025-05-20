@@ -129,25 +129,40 @@
     <div x-show="showModal"
         class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
         style="display: none;">
-        <div class="bg-white p-4 rounded w-[280px] max-h-[90vh] overflow-y-auto">
-            <h3 class="font-bold text-sm mb-2">職員を選択</h3>
+        <div class="bg-white p-4 rounded w-[300px] max-h-[90vh] overflow-y-auto">
+    <h3 class="font-bold text-sm mb-2">職員を選択</h3>
+
+    <template x-for="type in Object.values(shiftTypeCategories)" :key="type.id">
+        <div class="mb-3 border-b pb-2">
+            <p class="text-xs font-bold mb-1" x-text="type.name"></p>
             <template x-for="user in filteredUsers" :key="user.id">
-                <label class="block text-xs">
-                    <input type="checkbox" :value="user.id.toString()" x-model="selectedUserIds" class="mr-2">
+                <label class="block text-xs pl-2">
+                    <input type="checkbox"
+                           :value="`${type.id}-${user.id}`"
+                           x-model="selectedAssignments"
+                           class="mr-1">
                     <span x-text="user.name"></span>
-                    <template x-if="isNightShiftPreferred(user.id, targetDate)">
+                    <template x-if="shiftRequests[targetDate]?.[user.id]?.includes(type.id)">
                         <span class="ml-2 text-[10px] text-red-600 font-semibold">★夜勤希望</span>
                     </template>
                 </label>
             </template>
-            <div class="mt-3 flex justify-end gap-2 text-xs">
-                <button class="px-2 py-1 bg-gray-300 rounded" x-on:click="showModal = false">キャンセル</button>
-                <button class="px-2 py-1 bg-blue-600 text-white rounded" x-on:click="applySelection">決定</button>
-            </div>
         </div>
+    </template>
+
+    <div class="mt-3 flex justify-end gap-2 text-xs">
+        <button class="px-2 py-1 bg-gray-300 rounded" x-on:click="showModal = false">キャンセル</button>
+        <button class="px-2 py-1 bg-blue-600 text-white rounded" x-on:click="applySelection">決定</button>
+    </div>
+</div>
+
     </div>
 </div>
 @endsection
+
+@php
+    $shiftTypeCategoriesAssoc = collect($shiftTypeCategories)->keyBy('id');
+@endphp
 
 @push('scripts')
 <script>
@@ -159,6 +174,7 @@
     window.dates = @json($dates ?? []);
     window.buildings = @json($buildings ?? []);
     window.storeShiftUrl = @json(route('admin.shifts.night.store'));
+    window.shiftTypeCategories = @json($shiftTypeCategoriesAssoc);
 </script>
 @vite(['resources/js/app.js'])
 @endpush

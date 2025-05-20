@@ -19,6 +19,7 @@ export default function () {
         filteredUsers: [],
         showPrioritySettings: false,
         userFlags: {},
+        selectedAssignments: [],
 
         scoreOptions: _.cloneDeep(scoreOptionDefaults),
         labelMap: scoreOptionLabels,
@@ -53,19 +54,24 @@ export default function () {
         },
 
         applySelection() {
-            const selected = this.users
-                .filter(user => this.selectedUserIds.includes(user.id.toString()))
-                .map(user => ({
+            const selections = {};
+        
+            for (const entry of this.selectedAssignments) {
+                const [typeId, userId] = entry.split("-").map(Number);
+                const user = this.users.find(u => u.id === userId);
+                if (!selections[typeId]) selections[typeId] = [];
+        
+                selections[typeId].push({
                     id: user.id,
                     name: user.name,
                     shift_role: user.shift_role,
-                    color: this.userColors[user.id] || 'bg-gray-200'
-                }));
-
-            if (!this.assignments[this.targetDate]) {
-                this.assignments[this.targetDate] = {};
+                    color: this.userColors[user.id] || 'bg-gray-200',
+                    shift_type_id: typeId
+                });
             }
-            this.assignments[this.targetDate][this.targetBuilding] = selected;
+        
+            if (!this.assignments[this.targetDate]) this.assignments[this.targetDate] = {};
+            this.assignments[this.targetDate][this.targetBuilding] = selections;
             this.showModal = false;
         },
 

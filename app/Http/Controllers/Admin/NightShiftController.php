@@ -30,7 +30,7 @@ class NightShiftController extends Controller
             ];
         });
 
-        $shiftTypeCategories = ShiftType::pluck('category', 'id')->toArray();
+        $shiftTypeCategories = ShiftType::where('category', 'night')->get()->keyBy('id');
 
 
         $users = User::select('id', 'name', 'shift_role')->get();
