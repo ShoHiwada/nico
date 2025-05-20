@@ -168,7 +168,7 @@
                                 x-model="selectedAssignments"
                                 class="mr-1">
                             <span x-text="user.name"></span>
-                            <template x-if="shiftRequests[targetDate]?.[user.id]?.includes(type.id)">
+                            <template x-if="shiftRequests[targetDate]?.[user.id]?.includes(String(type.id))">
                                 <span class="ml-2 text-[10px] text-red-600 font-semibold">★夜勤希望</span>
                             </template>
                         </label>
