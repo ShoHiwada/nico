@@ -1,5 +1,9 @@
-export default function (typesFromBackend = [], shiftsFromBackend = {}, initialUsers = []) {
+export default function (currentMonthStr = '', daysArray = []) {
     return {
+        // --- 基本情報
+        currentMonth: currentMonthStr,
+        days: daysArray,
+
         // --- フィルター条件
         branch_id: '',
         department_id: '',
@@ -8,34 +12,54 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}, initialU
         branches: [],
         departments: [],
         positions: [],
-        users: initialUsers,
 
-        // --- シフト管理
-        shiftTypes: typesFromBackend,
+        // --- データ管理
+        users: [],
+        shiftTypes: [],
         shiftData: {},
-        initialShiftData: shiftsFromBackend,
         deletedDates: [],
 
-        // --- モーダル管理
+        // --- モーダル
         modalOpen: false,
         selectedUserId: null,
         selectedUserName: '',
         selectedDate: '',
         selectedTypes: [],
 
-        // 希望シフト管理
+        // --- 複数選択用
         selectedUserIds: [],
 
         async init() {
-            // 既存シフトを初期化
-            for (const date in this.initialShiftData) {
-                this.shiftData[date] = this.shiftData[date] || {};
-                for (const userId in this.initialShiftData[date]) {
-                    this.shiftData[date][userId] = [...this.initialShiftData[date][userId]];
-                }
-            }
+            await this.fetchUsers();
+            await this.fetchShiftTypes();
+            await this.fetchShiftData();
+            await this.fetchFilters();
+        },
 
-            // フィルター用データ取得
+        async fetchUsers() {
+            const res = await fetch('/admin/api/users');
+            this.users = await res.json();
+        },
+
+        async fetchShiftTypes() {
+            const res = await fetch('/admin/api/shift-types');
+            this.shiftTypes = await res.json();
+        },
+
+        async fetchShiftData() {
+            const res = await fetch(`/admin/shifts/fetch?month=${this.currentMonth}`);
+            const data = await res.json();
+
+            data.forEach(({ date, user_id, shift_type_id }) => {
+                if (!this.shiftData[date]) this.shiftData[date] = {};
+                if (!this.shiftData[date][user_id]) this.shiftData[date][user_id] = [];
+                if (!this.shiftData[date][user_id].includes(shift_type_id)) {
+                    this.shiftData[date][user_id].push(shift_type_id);
+                }
+            });
+        },
+
+        async fetchFilters() {
             this.branches = await (await fetch('/admin/branches')).json();
             this.departments = await (await fetch('/admin/departments')).json();
             this.positions = await (await fetch('/admin/positions')).json();
@@ -54,14 +78,12 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}, initialU
                 shift_role: this.shift_role
             });
 
-            const res = await fetch(`/admin/api/users?${params}`, {
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });            
-            
+            const res = await fetch(`/admin/api/users?${params}`);
             this.users = await res.json();
-            console.log(typeof users, users);
+        },
+
+        formatDate(day) {
+            return `${this.currentMonth}-${String(day).padStart(2, '0')}`;
         },
 
         openModal(userId, userName, date) {
@@ -73,26 +95,19 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}, initialU
         },
 
         saveSelection() {
-            if (!this.shiftData[this.selectedDate]) {
-                this.shiftData[this.selectedDate] = {};
-            }
+            const date = this.selectedDate;
+            const userId = this.selectedUserId;
+
+            if (!this.shiftData[date]) this.shiftData[date] = {};
 
             if (this.selectedTypes.length === 0) {
-                delete this.shiftData[this.selectedDate][this.selectedUserId];
-                const existing = this.deletedDates.find(
-                    d => d.date === this.selectedDate && d.user_id === this.selectedUserId
-                );
-                if (!existing) {
-                    this.deletedDates.push({
-                        date: this.selectedDate,
-                        user_id: this.selectedUserId
-                    });
+                delete this.shiftData[date][userId];
+                if (!this.deletedDates.find(d => d.date === date && d.user_id === userId)) {
+                    this.deletedDates.push({ date, user_id: userId });
                 }
             } else {
-                this.shiftData[this.selectedDate][this.selectedUserId] = [...this.selectedTypes];
-                this.deletedDates = this.deletedDates.filter(
-                    d => !(d.date === this.selectedDate && d.user_id === this.selectedUserId)
-                );
+                this.shiftData[date][userId] = [...this.selectedTypes];
+                this.deletedDates = this.deletedDates.filter(d => !(d.date === date && d.user_id === userId));
             }
 
             this.modalOpen = false;
@@ -100,14 +115,11 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}, initialU
 
         getLabel(date, userId) {
             const types = this.shiftData[date]?.[userId] || [];
-            return types.map(id => {
-                const found = this.shiftTypes.find(t => t.id == id);
-                return found ? found.name : '';
-            }).join('<br>');
+            return types.map(id => this.shiftTypes.find(t => t.id == id)?.name || '').join('<br>');
         },
 
         hasShift(date, userId) {
-            return (this.shiftData[date]?.[userId] || []).length > 0;
+            return this.shiftData?.[date]?.[userId]?.length > 0;
         },
 
         prevDate(date) {
@@ -130,7 +142,7 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}, initialU
             const has = this.hasShift(date, userId);
             const hasPrev = this.hasShift(this.prevDate(date), userId);
             const hasNext = this.hasShift(this.nextDate(date), userId);
-        
+
             if (!has) return '';
             if (!hasPrev && !hasNext) return 'rounded-full';
             if (!hasPrev && hasNext) return 'rounded-s-full';
@@ -138,26 +150,30 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}, initialU
             return 'rounded-none';
         },
 
-        // 希望シフト管理
         toggleAllUsers(checked) {
             this.selectedUserIds = checked ? this.users.map(u => u.id) : [];
         },
-        
+
         reflectShiftRequests() {
             if (this.selectedUserIds.length === 0) {
                 alert("対象者が選択されていません。");
                 return;
             }
-        
+
             this.selectedUserIds.forEach(userId => {
-                const requests = this.getRequestsForUser(userId); // ←希望シフトの取得ロジック（要実装）
+                const requests = this.getRequestsForUser(userId);
                 for (const [date, types] of Object.entries(requests)) {
                     if (!this.shiftData[date]) this.shiftData[date] = {};
                     this.shiftData[date][userId] = types;
                 }
             });
-        
+
             alert("希望シフトを反映しました。");
         },
-    };
+
+        // ダミー：必要なら後で実装
+        getRequestsForUser(userId) {
+            return {};
+        }
+    }
 }

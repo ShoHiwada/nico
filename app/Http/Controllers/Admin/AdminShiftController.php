@@ -16,40 +16,49 @@ class AdminShiftController extends Controller
     {
         $users = User::where('is_admin', false)->get();
         $shiftTypes = ShiftType::all();
-    
+
         $month = request('month', now()->format('Y-m'));
         $daysInMonth = Carbon::parse($month)->daysInMonth;
-        $days = range(1, $daysInMonth);        
-    
+        $days = range(1, $daysInMonth);
+
         $shifts = Shift::whereBetween('date', [
-                Carbon::parse($month)->startOfMonth(),
-                Carbon::parse($month)->endOfMonth()
-            ])
+            Carbon::parse($month)->startOfMonth(),
+            Carbon::parse($month)->endOfMonth()
+        ])
             ->get();
-    
-        // ✅ JSで使いやすい形式に変換
+
+        // JSで使いやすい形式に変換
         $initialShifts = [];
         foreach ($shifts as $shift) {
             $date = $shift->date;
             $userId = $shift->user_id;
             $typeId = $shift->shift_type_id;
-    
+
             if (!isset($initialShifts[$date])) {
                 $initialShifts[$date] = [];
             }
             if (!isset($initialShifts[$date][$userId])) {
                 $initialShifts[$date][$userId] = [];
             }
-    
+
             $initialShifts[$date][$userId][] = $typeId;
         }
-    
+
+        $shiftsJson = $shifts->map(function ($shift) {
+            return [
+                'date' => $shift->date,
+                'user_id' => $shift->user_id,
+                'shift_type_id' => $shift->shift_type_id,
+            ];
+        });
+
         return view('admin.shifts.index', [
             'users' => $users,
             'shiftTypes' => $shiftTypes,
             'days' => $days,
             'currentMonth' => $month,
             'initialShiftsJson' => json_encode($initialShifts),
+            'ShiftsJson' => $shiftsJson->toJson(), 
         ]);
     }
 
@@ -58,9 +67,7 @@ class AdminShiftController extends Controller
         $year = $request->query('year', now()->year);
         $month = str_pad($request->query('month', now()->month), 2, '0', STR_PAD_LEFT);
         $ym = $year . '-' . $month;
-    
         $days = range(1, Carbon::parse($ym)->daysInMonth);
-    
         return view('admin.shifts.index', [
             'users' => User::where('is_admin', false)->get(),
             'shiftTypes' => ShiftType::all(),
@@ -68,7 +75,6 @@ class AdminShiftController extends Controller
             'currentMonth' => $ym,
         ]);
     }
-    
 
 
     public function store(Request $request)
@@ -232,5 +238,31 @@ class AdminShiftController extends Controller
         }
 
         return redirect()->route('admin.shifts.index')->with('success', implode('<br>', $messages));
+    }
+
+    public function fetchShifts(Request $request)
+    {
+        $query = Shift::query();
+    
+        if ($request->filled('month')) {
+            $query->whereBetween('date', [
+                Carbon::parse($request->month)->startOfMonth()->toDateString(),
+                Carbon::parse($request->month)->endOfMonth()->toDateString(),
+            ]);
+        }
+    
+        if ($request->filled('building_id')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('building_id', $request->building_id);
+            });
+        }
+    
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+    
+        return response()->json(
+            $query->get(['date', 'user_id', 'shift_type_id'])
+        );
     }
 }

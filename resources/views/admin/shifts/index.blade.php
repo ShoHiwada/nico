@@ -3,51 +3,30 @@
 @section('content')
 <h2 class="text-2xl font-bold mb-4">シフト作成（表形式）</h2>
 
-
-<div x-data="shiftTableDay(window.shiftTypes, window.initialShifts, window.users)">
-
+<div x-data="shiftTableDay(window.currentMonth, window.days)">
     <!-- フィルターUI -->
     <div class="p-4 border border-gray-300 rounded-xl mb-4">
         <div class="flex flex-wrap items-end gap-4">
-            <div class="flex flex-col">
-                <label class="font-semibold">支店</label>
-                <select x-model="branch_id" class="border rounded p-1 w-40">
-                    <option value="">全ての支店</option>
-                    <template x-for="b in branches" :key="b.id">
-                        <option :value="b.id" x-text="b.name"></option>
-                    </template>
-                </select>
-            </div>
-
-            <div class="flex flex-col">
-                <label class="font-semibold">部署</label>
-                <select x-model="department_id" class="border rounded p-1 w-40">
-                    <option value="">全ての部署</option>
-                    <template x-for="d in filteredDepartments" :key="d.id">
-                        <option :value="d.id" x-text="d.name"></option>
-                    </template>
-                </select>
-            </div>
-
-            <div class="flex flex-col">
-                <label class="font-semibold">役職</label>
-                <select x-model="position_id" class="border rounded p-1 w-40">
-                    <option value="">全ての役職</option>
-                    <template x-for="p in positions" :key="p.id">
-                        <option :value="p.id" x-text="p.name"></option>
-                    </template>
-                </select>
-            </div>
-
-            <div class="flex flex-col">
-                <label class="font-semibold">勤務種別</label>
-                <select x-model="shift_role" class="border rounded p-1 w-40">
-                    <option value="">全て</option>
-                    <option value="day">日勤</option>
-                    <option value="night">夜勤</option>
-                    <option value="both">両方</option>
-                </select>
-            </div>
+            <template x-for="filter in [
+                { label: '支店', model: 'branch_id', options: branches },
+                { label: '部署', model: 'department_id', options: filteredDepartments },
+                { label: '役職', model: 'position_id', options: positions },
+                { label: '勤務種別', model: 'shift_role', options: [
+                    { id: '', name: '全て' },
+                    { id: 'day', name: '日勤' },
+                    { id: 'night', name: '夜勤' },
+                    { id: 'both', name: '両方' }
+                ] }
+            ]" :key="filter.model">
+                <div class="flex flex-col">
+                    <label class="font-semibold" x-text="filter.label"></label>
+                    <select :x-model="filter.model" class="border rounded p-1 w-40">
+                        <template x-for="opt in filter.options" :key="opt.id">
+                            <option :value="opt.id" x-text="opt.name"></option>
+                        </template>
+                    </select>
+                </div>
+            </template>
 
             <div class="flex flex-col">
                 <button @click="filterUsers" class="bg-blue-600 text-white px-4 py-2 rounded mt-5">
@@ -64,7 +43,6 @@
     <!-- フォーム全体 -->
     <form method="POST" action="{{ route('admin.shifts.store') }}">
         @csrf
-
         <div class="overflow-x-auto relative">
             <div class="max-w-[1024px] mx-auto">
                 <table class="table-auto border-collapse w-full text-xs">
@@ -74,20 +52,9 @@
                                 <input type="checkbox" @click="toggleAllUsers($event.target.checked)">
                             </th>
                             <th class="sticky left-0 z-20 bg-gray-200 px-4 py-2">職員名</th>
-                            @foreach ($days as $day)
-                            @php
-                            $dateObj = \Carbon\Carbon::parse("{$currentMonth}-" . str_pad($day, 2, '0', STR_PAD_LEFT));
-                            $w = ['日','月','火','水','木','金','土'][$dateObj->dayOfWeek];
-                            $cls = match($dateObj->dayOfWeek) {
-                            0 => 'text-red-600',
-                            6 => 'text-blue-600',
-                            default => 'text-gray-600',
-                            };
-                            @endphp
-                            <th class="px-2 py-1 text-center bg-gray-100">
-                                {{ $day }}<br><span class="text-xs {{ $cls }}">({{ $w }})</span>
-                            </th>
-                            @endforeach
+                            <template x-for="day in days" :key="day">
+                                <th class="px-2 py-1 text-center bg-gray-100" x-text="day"></th>
+                            </template>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,23 +63,23 @@
                                 <td class="text-center bg-gray-50">
                                     <input type="checkbox" :value="user.id" x-model="selectedUserIds">
                                 </td>
-                                <td class="sticky left-0 z-10 bg-gray-50 px-4 py-2 font-semibold text-base whitespace-nowrap"
-                                    x-text="user.name"></td>
-                                @foreach ($days as $day)
-                                @php $date = $currentMonth . '-' . str_pad($day, 2, '0', STR_PAD_LEFT); @endphp
-                                <td class="relative z-0 border text-center align-middle p-0"
-                                    @click="openModal(user.id, user.name, '{{ $date }}')">
-                                    <template x-if="hasShift('{{ $date }}', user.id)">
-                                        <div class="absolute z-10 bg-green-200 ring-2 ring-green-500 shadow-md
-                                  flex items-center justify-center text-[10px] text-center leading-tight
-                                  transition-all duration-200 hover:scale-105 whitespace-pre-line"
-                                            :class="getShiftClass('{{ $date }}', user.id)"
-                                            style="height: 70%; width: 88%; top: 15%; left: 2%; padding: 2px 4px;">
-                                            <span x-html="getLabel('{{ $date }}', user.id)"></span>
-                                        </div>
-                                    </template>
-                                </td>
-                                @endforeach
+                                <td class="sticky left-0 z-10 bg-gray-50 px-4 py-2 font-semibold text-base whitespace-nowrap" x-text="user.name"></td>
+
+                                <template x-for="day in days" :key="day">
+                                    <td class="relative z-0 border text-center align-middle p-0"
+                                        :data-date="formatDate(day)"
+                                        @click="openModal(user.id, user.name, formatDate(day))">
+                                        <template x-if="hasShift(formatDate(day), user.id)">
+                                            <div class="absolute z-10 bg-green-200 ring-2 ring-green-500 shadow-md
+                                                flex items-center justify-center text-[10px] text-center leading-tight
+                                                transition-all duration-200 hover:scale-105 whitespace-pre-line"
+                                                :class="getShiftClass(formatDate(day), user.id)"
+                                                style="height: 70%; width: 88%; top: 15%; left: 2%; padding: 2px 4px;">
+                                                <span x-html="getLabel(formatDate(day), user.id)"></span>
+                                            </div>
+                                        </template>
+                                    </td>
+                                </template>
                             </tr>
                         </template>
                     </tbody>
@@ -134,19 +101,12 @@
             <input type="hidden" name="deleted_dates[]" :value="JSON.stringify(item)">
         </template>
 
-        <!-- 希望シフト反映ボタン -->
-        <div class="mt-4 text-left">
-            <button
-                type="button"
-                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                @click="reflectShiftRequests"
-                :disabled="selectedUserIds.length === 0">
+        <div class="mt-4 flex justify-between items-center">
+            <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                @click="reflectShiftRequests" :disabled="selectedUserIds.length === 0">
                 希望シフトを反映（対象: <span x-text="selectedUserIds.length"></span> 名）
             </button>
-        </div>
 
-        <!-- 登録ボタン -->
-        <div class="mt-4 text-right">
             <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
                 登録する
             </button>
@@ -174,12 +134,9 @@
 </div>
 @endsection
 
-
-
 @push('scripts')
 <script>
-    window.shiftTypes = @json($shiftTypes);
-    window.initialShifts = @json($initialShiftsJson);
-    window.users = @json($users);
+    window.currentMonth = '{{ $currentMonth }}';
+    window.days = @json($days);
 </script>
 @endpush
