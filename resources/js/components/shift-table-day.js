@@ -1,23 +1,64 @@
-export default function (typesFromBackend = [], shiftsFromBackend = {}) {
+export default function (typesFromBackend = [], shiftsFromBackend = {}, initialUsers = []) {
     return {
+        // --- フィルター条件
+        branch_id: '',
+        department_id: '',
+        position_id: '',
+        shift_role: '',
+        branches: [],
+        departments: [],
+        positions: [],
+        users: initialUsers,
+
+        // --- シフト管理
+        shiftTypes: typesFromBackend,
+        shiftData: {},
+        initialShiftData: shiftsFromBackend,
+        deletedDates: [],
+
+        // --- モーダル管理
         modalOpen: false,
         selectedUserId: null,
         selectedUserName: '',
         selectedDate: '',
         selectedTypes: [],
-        shiftData: {},
-        deletedDates: [],
-        shiftTypes: typesFromBackend,
-        initialShiftData: shiftsFromBackend, 
 
-        init() {
-            // 既存のシフト情報をセット
+        async init() {
+            // 既存シフトを初期化
             for (const date in this.initialShiftData) {
                 this.shiftData[date] = this.shiftData[date] || {};
                 for (const userId in this.initialShiftData[date]) {
                     this.shiftData[date][userId] = [...this.initialShiftData[date][userId]];
                 }
             }
+
+            // フィルター用データ取得
+            this.branches = await (await fetch('/admin/branches')).json();
+            this.departments = await (await fetch('/admin/departments')).json();
+            this.positions = await (await fetch('/admin/positions')).json();
+        },
+
+        get filteredDepartments() {
+            if (!this.branch_id) return this.departments;
+            return this.departments.filter(d => d.branch_id == this.branch_id);
+        },
+
+        async filterUsers() {
+            const params = new URLSearchParams({
+                branch_id: this.branch_id,
+                department_id: this.department_id,
+                position_id: this.position_id,
+                shift_role: this.shift_role
+            });
+
+            const res = await fetch(`/admin/api/users?${params}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });            
+            
+            this.users = await res.json();
+            console.log(typeof users, users);
         },
 
         openModal(userId, userName, date) {
@@ -34,10 +75,7 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}) {
             }
 
             if (this.selectedTypes.length === 0) {
-                // 選択が空なら削除としてマーク
                 delete this.shiftData[this.selectedDate][this.selectedUserId];
-
-                // 削除対象として記録（既に追加されていないかチェック）
                 const existing = this.deletedDates.find(
                     d => d.date === this.selectedDate && d.user_id === this.selectedUserId
                 );
@@ -48,10 +86,7 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}) {
                     });
                 }
             } else {
-                // 選択があるなら通常保存
                 this.shiftData[this.selectedDate][this.selectedUserId] = [...this.selectedTypes];
-
-                // 削除対象から除外（再登録された場合）
                 this.deletedDates = this.deletedDates.filter(
                     d => !(d.date === this.selectedDate && d.user_id === this.selectedUserId)
                 );
@@ -88,7 +123,6 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}) {
             return this.hasShift(this.prevDate(date), userId) || this.hasShift(this.nextDate(date), userId);
         },
 
-        // シフトをスライム
         getShiftClass(date, userId) {
             const has = this.hasShift(date, userId);
             const hasPrev = this.hasShift(this.prevDate(date), userId);
@@ -96,9 +130,9 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}) {
         
             if (!has) return '';
             if (!hasPrev && !hasNext) return 'rounded-full';
-            if (!hasPrev && hasNext) return 'rounded-s-full'; // 左だけ
-            if (hasPrev && !hasNext) return 'rounded-e-full'; // 右だけ    
+            if (!hasPrev && hasNext) return 'rounded-s-full';
+            if (hasPrev && !hasNext) return 'rounded-e-full';
             return 'rounded-none';
-        }        
+        }
     };
 }

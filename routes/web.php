@@ -45,6 +45,11 @@ Route::middleware(['auth'])->group(function () {
 // 管理者ページ
 Route::middleware(['auth', 'checkAdmin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
+    Route::get('/branches', fn() => \App\Models\Branch::all());
+    Route::get('/departments', fn() => \App\Models\Department::all());
+    Route::get('/positions', fn() => \App\Models\Position::all());
+    // Route::get('/users', [UserController::class, 'fetchUsers']);
+    Route::get('/api/users', [UserController::class, 'apiIndex']);
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/shifts', [AdminShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts', [AdminShiftController::class, 'store'])->name('shifts.store');
