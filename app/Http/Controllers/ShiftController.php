@@ -87,20 +87,24 @@ class ShiftController extends Controller
     public function events()
     {
         $user = Auth::user();
-        $shifts = Shift::where('user_id', $user->id)
+    
+        // 勤務タイプ名を取得するため、shiftType を Eager Load
+        $shifts = Shift::with('shiftType')
+            ->where('user_id', $user->id)
             ->orderBy('date')
             ->get();
-
+    
         $events = $shifts->map(function ($shift) {
             return [
-                'title' => $shift->type, // シフトタイプ（日勤、夜勤、休）
-                'start' => $shift->date,  // シフトの日付
-                'allDay' => true,         // 終日表示
+                'title' => $shift->shiftType->name ?? '（未設定）',  // nameを使う
+                'start' => $shift->date,
+                'allDay' => true,
             ];
         });
-
+    
         return response()->json($events);
     }
+    
     public function applyFixed(Request $request)
     {
         $request->validate([
