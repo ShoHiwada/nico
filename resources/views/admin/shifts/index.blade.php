@@ -7,26 +7,47 @@
     <!-- フィルターUI -->
     <div class="p-4 border border-gray-300 rounded-xl mb-4">
         <div class="flex flex-wrap items-end gap-4">
-            <template x-for="filter in [
-                { label: '支店', model: 'branch_id', options: branches },
-                { label: '部署', model: 'department_id', options: filteredDepartments },
-                { label: '役職', model: 'position_id', options: positions },
-                { label: '勤務種別', model: 'shift_role', options: [
-                    { id: '', name: '全て' },
-                    { id: 'day', name: '日勤' },
-                    { id: 'night', name: '夜勤' },
-                    { id: 'both', name: '両方' }
-                ] }
-            ]" :key="filter.model">
-                <div class="flex flex-col">
-                    <label class="font-semibold" x-text="filter.label"></label>
-                    <select :x-model="filter.model" class="border rounded p-1 w-40">
-                        <template x-for="opt in filter.options" :key="opt.id">
-                            <option :value="opt.id" x-text="opt.name"></option>
-                        </template>
-                    </select>
-                </div>
-            </template>
+            <div class="flex flex-col">
+                <label class="font-semibold">支店</label>
+                <select x-model="branch_id" class="border rounded p-1 w-40">
+                    <template x-for="opt in branches" :key="opt.id">
+                        <option :value="opt.id" x-text="opt.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <div class="flex flex-col">
+                <label class="font-semibold">部署</label>
+                <select x-model="department_id" class="border rounded p-1 w-40">
+                    <template x-for="opt in filteredDepartments" :key="opt.id">
+                        <option :value="opt.id" x-text="opt.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <div class="flex flex-col">
+                <label class="font-semibold">役職</label>
+                <select x-model="position_id" class="border rounded p-1 w-40">
+                    <template x-for="opt in positions" :key="opt.id">
+                        <option :value="opt.id" x-text="opt.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <div class="flex flex-col">
+                <label class="font-semibold">勤務種別</label>
+                <select x-model="shift_role" class="border rounded p-1 w-40">
+                    <template x-for="opt in [
+            { id: '', name: '全て' },
+            { id: 'day', name: '日勤' },
+            { id: 'night', name: '夜勤' },
+            { id: 'both', name: '両方' }
+        ]" :key="opt.id">
+                        <option :value="opt.id" x-text="opt.name"></option>
+                    </template>
+                </select>
+            </div>
+
 
             <div class="flex flex-col">
                 <button @click="filterUsers" class="bg-blue-600 text-white px-4 py-2 rounded mt-5">
@@ -35,7 +56,7 @@
             </div>
 
             <div class="flex items-center h-full">
-                <p class="font-semibold">絞り込み結果: <span x-text="users.length"></span> 件</p>
+                <p class="text-xs text-gray-600">絞り込み結果: <span x-text="users.length"></span> 件</p>
             </div>
         </div>
     </div>
