@@ -52,7 +52,26 @@ class AdminShiftRequestController extends Controller
             'deadlines' => $deadlines,
         ]);
     }
+
+    public function apiIndex(Request $request)
+    {
+        $query = ShiftRequest::query();
     
+        if ($request->filled('month')) {
+            $query->where('month', $request->month);
+        }
     
+        if ($request->filled('user_ids')) {
+            $query->whereIn('user_id', $request->user_ids);
+        }
+    
+        return $query->get(['user_id', 'date', 'week_patterns'])->map(function ($r) {
+            return [
+                'user_id' => $r->user_id,
+                'date' => $r->date,
+                'week_patterns' => $r->week_patterns ?? [],
+            ];
+        });
+    }    
 
 }

@@ -82,6 +82,51 @@ export default function (currentMonthStr = '', daysArray = []) {
             this.users = await res.json();
         },
 
+        // 希望シフト反映
+        async reflectShiftRequests() {
+            if (this.selectedUserIds.length === 0) {
+                alert("対象者が選択されていません。");
+                return;
+            }
+        
+            const params = new URLSearchParams();
+            params.append('month', this.currentMonth);
+            this.selectedUserIds.forEach(id => params.append('user_ids[]', id));
+        
+            try {
+                const res = await fetch(`/admin/api/shift-requests?${params}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+        
+                const data = await res.json();
+                console.log("📥 希望シフトデータ:", data);
+        
+                data.forEach(({ user_id, date, week_patterns }) => {
+                    if (!this.shiftData[date]) this.shiftData[date] = {};
+                    
+                    // 🛡️ 防御的に型チェック
+                    const patterns = Array.isArray(week_patterns)
+                        ? week_patterns
+                        : typeof week_patterns === 'string'
+                        ? JSON.parse(week_patterns || '[]')
+                        : [];
+                
+                    console.log(`▶ user: ${user_id}, date: ${date}, patterns:`, patterns); // ← ここに移動
+                
+                    this.shiftData[date][user_id] = patterns.map(Number);
+                });
+                
+                
+        
+                alert(`希望シフトを反映しました（${this.selectedUserIds.length}名）`);
+                console.log("📝 反映後の shiftData:", this.shiftData);
+        
+            } catch (error) {
+                console.error("❌ シフト希望の取得に失敗しました", error);
+                alert("シフト希望の取得に失敗しました。");
+            }
+        },            
+
         formatDate(day) {
             return `${this.currentMonth}-${String(day).padStart(2, '0')}`;
         },
@@ -152,23 +197,6 @@ export default function (currentMonthStr = '', daysArray = []) {
 
         toggleAllUsers(checked) {
             this.selectedUserIds = checked ? this.users.map(u => u.id) : [];
-        },
-
-        reflectShiftRequests() {
-            if (this.selectedUserIds.length === 0) {
-                alert("対象者が選択されていません。");
-                return;
-            }
-
-            this.selectedUserIds.forEach(userId => {
-                const requests = this.getRequestsForUser(userId);
-                for (const [date, types] of Object.entries(requests)) {
-                    if (!this.shiftData[date]) this.shiftData[date] = {};
-                    this.shiftData[date][userId] = types;
-                }
-            });
-
-            alert("希望シフトを反映しました。");
         },
 
         // ダミー：必要なら後で実装
