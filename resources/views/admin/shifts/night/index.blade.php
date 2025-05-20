@@ -34,8 +34,8 @@
                     </th>
                     @foreach ($dates as $d)
                     @php
-                        $carbonDate = \Carbon\Carbon::parse($d['date']);
-                        $weekdayJa = ['日','月','火','水','木','金','土'][$carbonDate->dayOfWeek];
+                    $carbonDate = \Carbon\Carbon::parse($d['date']);
+                    $weekdayJa = ['日','月','火','水','木','金','土'][$carbonDate->dayOfWeek];
                     @endphp
                     <th class="border p-2 min-w-[100px] max-w-[120px] text-center text-xs
                         @if ($d['dayOfWeek'] === 0) text-red-500 bg-red-50
@@ -55,20 +55,32 @@
                         {{ $building->name }}
                     </td>
                     @foreach ($dates as $date)
+
                     <td class="border p-2 min-w-[100px] max-w-[120px] text-center align-top hover:bg-blue-50 cursor-pointer"
                         x-on:click="editCell('{{ $date['date'] }}', {{ $building->id }})">
                         <template x-if="assignments['{{ $date['date'] }}'] && assignments['{{ $date['date'] }}'][{{ $building->id }}]">
-                            <div class="flex flex-wrap justify-center gap-1">
-                                <template x-for="user in assignments['{{ $date['date'] }}'][{{ $building->id }}]" :key="user.id">
-                                    <span class="inline-block text-xs px-2 py-1 rounded-full whitespace-nowrap leading-tight"
-                                          :class="user.color"
-                                          x-text="user.name"></span>
+                            <div class="flex flex-col gap-1">
+                                <template
+                                    x-for="[shiftTypeId, users] in Object.entries(assignments['{{ $date['date'] }}'][{{ $building->id }}])"
+                                    :key="shiftTypeId">
+                                    <div class="flex flex-wrap justify-center gap-1">
+                                        <template x-for="user in users" :key="user.id">
+                                            <span
+                                                class="inline-block text-xs px-2 py-1 rounded-full text-white"
+                                                :class="shiftTypeColors[String(user.shift_type_id)] || 'bg-gray-400'"
+                                                x-text="user.name"></span>
+
+                                        </template>
+                                    </div>
                                 </template>
                             </div>
                         </template>
+
                         <template x-if="!assignments['{{ $date['date'] }}'] || !assignments['{{ $date['date'] }}'][{{ $building->id }}]">
                             <span class="text-blue-500 text-xs">＋</span>
                         </template>
+                    </td>
+
                     </td>
                     @endforeach
                 </tr>
@@ -81,6 +93,20 @@
     <button class="m-4 px-4 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700" x-on:click="submit()">
         登録
     </button>
+
+    <div class="mt-4 text-xs">
+        <h4 class="font-bold mb-1">🖍 シフトタイプの色説明</h4>
+        <div class="flex flex-wrap gap-2">
+            <template x-for="[id, type] in Object.entries(shiftTypeCategories)" :key="id">
+                <div class="flex items-center gap-2">
+                    <div :class="shiftTypeColors[id] || 'bg-gray-400'" class="w-4 h-4 rounded-full"></div>
+                    <span x-text="type.name"></span>
+                </div>
+            </template>
+        </div>
+    </div>
+
+
 
     <!-- スコア設定 -->
     <div class="mb-4 p-2 border border-gray-300 rounded bg-gray-50">
@@ -130,43 +156,43 @@
         class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
         style="display: none;">
         <div class="bg-white p-4 rounded w-[300px] max-h-[90vh] overflow-y-auto">
-    <h3 class="font-bold text-sm mb-2">職員を選択</h3>
+            <h3 class="font-bold text-sm mb-2">職員を選択</h3>
 
-    <template x-for="type in Object.values(shiftTypeCategories)" :key="type.id">
-        <div class="mb-3 border-b pb-2">
-            <p class="text-xs font-bold mb-1" x-text="type.name"></p>
-            <template x-for="user in filteredUsers" :key="user.id">
-                <label class="block text-xs pl-2">
-                    <input type="checkbox"
-                           :value="`${type.id}-${user.id}`"
-                           x-model="selectedAssignments"
-                           class="mr-1">
-                    <span x-text="user.name"></span>
-                    <template x-if="shiftRequests[targetDate]?.[user.id]?.includes(type.id)">
-                        <span class="ml-2 text-[10px] text-red-600 font-semibold">★夜勤希望</span>
+            <template x-for="type in Object.values(shiftTypeCategories)" :key="type.id">
+                <div class="mb-3 border-b pb-2">
+                    <p class="text-xs font-bold mb-1" x-text="type.name"></p>
+                    <template x-for="user in filteredUsers" :key="user.id">
+                        <label class="block text-xs pl-2">
+                            <input type="checkbox"
+                                :value="`${type.id}-${user.id}`"
+                                x-model="selectedAssignments"
+                                class="mr-1">
+                            <span x-text="user.name"></span>
+                            <template x-if="shiftRequests[targetDate]?.[user.id]?.includes(type.id)">
+                                <span class="ml-2 text-[10px] text-red-600 font-semibold">★夜勤希望</span>
+                            </template>
+                        </label>
                     </template>
-                </label>
+                </div>
             </template>
-        </div>
-    </template>
 
-    <div class="mt-3 flex justify-end gap-2 text-xs">
-        <button class="px-2 py-1 bg-gray-300 rounded" x-on:click="showModal = false">キャンセル</button>
-        <button class="px-2 py-1 bg-blue-600 text-white rounded" x-on:click="applySelection">決定</button>
-    </div>
-</div>
+            <div class="mt-3 flex justify-end gap-2 text-xs">
+                <button class="px-2 py-1 bg-gray-300 rounded" x-on:click="showModal = false">キャンセル</button>
+                <button class="px-2 py-1 bg-blue-600 text-white rounded" x-on:click="applySelection">決定</button>
+            </div>
+        </div>
 
     </div>
 </div>
 @endsection
 
 @php
-    $shiftTypeCategoriesAssoc = collect($shiftTypeCategories)->keyBy('id');
+$shiftTypeCategoriesAssoc = collect($shiftTypeCategories)->keyBy('id');
 @endphp
 
 @push('scripts')
 <script>
-    window.assignments = @json($assignments ?: (object) []);
+    window.assignments = @json($assignments ? : (object)[]);
     window.users = @json($users ?? []);
     window.userColors = @json($userColors ?? []);
     window.shiftRequests = @json($shiftRequests ?? []);
@@ -174,7 +200,6 @@
     window.dates = @json($dates ?? []);
     window.buildings = @json($buildings ?? []);
     window.storeShiftUrl = @json(route('admin.shifts.night.store'));
-    window.shiftTypeCategories = @json($shiftTypeCategoriesAssoc);
 </script>
 @vite(['resources/js/app.js'])
 @endpush

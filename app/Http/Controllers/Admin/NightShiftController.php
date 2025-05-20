@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Shift;
-use App\Models\ShiftType;
 use App\Models\ShiftNight;
+use App\Models\ShiftType;
 use App\Models\ShiftRequest;
 use App\Models\User;
 use App\Models\Building;
 use Carbon\CarbonPeriod;
+use Carbon\Carbon;
 
 class NightShiftController extends Controller
 {
@@ -19,30 +19,75 @@ class NightShiftController extends Controller
         $year = $request->input('year', now()->year);
         $month = $request->input('month', now()->month);
 
-        // 月初〜月末の日付リストを生成
-        $start = now()->setDate($year, $month, 1)->startOfMonth();
+        $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $end = $start->copy()->endOfMonth();
 
         $dates = collect(CarbonPeriod::create($start, $end))->map(function ($d) {
             return [
                 'date' => $d->toDateString(),
-                'dayOfWeek' => $d->dayOfWeek, // 0:日, 6:土
+                'dayOfWeek' => $d->dayOfWeek,
             ];
         });
 
-        $shiftTypeCategories = ShiftType::where('category', 'night')->get()->keyBy('id');
-
-
         $users = User::select('id', 'name', 'shift_role')->get();
         $buildings = Building::all();
+        $shiftTypeCategories = ShiftType::where('category', 'night')->get()->keyBy('id');
+        
 
-        // 希望データを整形
-        $allShiftRequests = ShiftRequest::whereDate('date', '>=', $start->toDateString())
-        ->whereDate('date', '<=', $end->toDateString())
-        ->get();
-    
-        $shiftRequests = $allShiftRequests
-            ->groupBy(fn($item) => \Carbon\Carbon::parse($item->date)->toDateString())
+        // 色割り当て
+        $userColors = $this->generateUserColors($users);
+
+        // 希望シフト整形
+        $shiftRequests = $this->formatShiftRequests($start, $end);
+
+        // 既存の夜勤シフト取得
+        $assignments = $this->getAssignments($start, $end);
+
+        return view('admin.shifts.night.index', compact(
+            'users',
+            'buildings',
+            'dates',
+            'userColors',
+            'assignments',
+            'shiftRequests',
+            'shiftTypeCategories' // 👈 name だけ変数未定義、修正必要
+        ))->with([
+            'currentYear' => $year,
+            'currentMonth' => $month,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $assignments = $request->input('assignments', []);
+
+        // 全削除 → 再登録方式（差分保存より簡易）
+        ShiftNight::whereBetween('date', [min(array_keys($assignments)), max(array_keys($assignments))])->delete();
+
+        foreach ($assignments as $date => $buildings) {
+            foreach ($buildings as $buildingId => $typeGroups) {
+                foreach ($typeGroups as $shiftTypeId => $users) {
+                    foreach ($users as $user) {
+                        ShiftNight::create([
+                            'date' => $date,
+                            'building_id' => $buildingId,
+                            'user_id' => $user['id'],
+                            'shift_type_id' => $shiftTypeId,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return response()->json(['message' => '夜勤シフトを保存しました']);
+    }
+
+    private function formatShiftRequests($start, $end)
+    {
+        $all = ShiftRequest::whereBetween('date', [$start->toDateString(), $end->toDateString()])->get();
+
+        return $all
+            ->groupBy(fn($item) => Carbon::parse($item->date)->toDateString())
             ->map(fn($byDate) =>
                 $byDate->groupBy('user_id')->map(fn($items) =>
                     collect($items)->flatMap(function ($item) {
@@ -56,91 +101,51 @@ class NightShiftController extends Controller
                     })->unique()->values()
                 )
             );
-    
+    }
+
+    private function generateUserColors($users)
+    {
         $baseColors = [
-            'red',
-            'orange',
-            'amber',
-            'yellow',
-            'lime',
-            'green',
-            'emerald',
-            'teal',
-            'cyan',
-            'sky',
-            'blue',
-            'indigo',
-            'violet',
-            'purple',
-            'fuchsia',
-            'pink',
-            'rose'
+            'red', 'orange', 'amber', 'yellow', 'lime',
+            'green', 'emerald', 'teal', 'cyan', 'sky',
+            'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'
         ];
-        $userColors = [];
+
         $shade = 200;
+        $userColors = [];
+
         foreach ($users as $i => $user) {
-            $colorName = $baseColors[$i % count($baseColors)];
-            $userColors[$user->id] = "bg-{$colorName}-{$shade}";
+            $color = $baseColors[$i % count($baseColors)];
+            $userColors[$user->id] = "bg-{$color}-{$shade}";
         }
 
-        // 対象月のみ取得
+        return $userColors;
+    }
+
+    private function getAssignments($start, $end)
+    {
         $rawShifts = ShiftNight::whereBetween('date', [$start->toDateString(), $end->toDateString()])
             ->with('user')
             ->get()
             ->groupBy(['date', 'building_id']);
 
         $assignments = [];
+
         foreach ($rawShifts as $date => $byBuilding) {
             foreach ($byBuilding as $buildingId => $shifts) {
-                $assignments[$date][$buildingId] = $shifts->map(function ($s) use ($userColors) {
-                    return [
-                        'id' => $s->user->id,
-                        'name' => $s->user->name,
-                        'shift_role' => $s->user->shift_role,
-                        'color' => $userColors[$s->user->id] ?? 'bg-gray-200'
-                    ];
-                })->values();
-            }
-        }
-
-        return view('admin.shifts.night.index', compact(
-            'users',
-            'buildings',
-            'dates',
-            'userColors',
-            'assignments',
-            'shiftRequests',
-            'shiftTypeCategories',
-            'start',
-            'end',
-        ))->with([
-            'currentYear' => $year,
-            'currentMonth' => $month,
-        ]);
-    }
-
-
-    public function store(Request $request)
-    {
-        $assignments = $request->input('assignments');
-
-        foreach ($assignments as $date => $buildings) {
-            foreach ($buildings as $buildingId => $users) {
-                ShiftNight::where('date', $date)
-                    ->where('building_id', $buildingId)
-                    ->delete();
-
-                foreach ($users as $user) {
-                    ShiftNight::create([
-                        'user_id' => $user['id'],
-                        'building_id' => $buildingId,
-                        'date' => $date,
-                        'status' => 'draft',
-                    ]);
+                foreach ($shifts->groupBy('shift_type_id') as $shiftTypeId => $group) {
+                    foreach ($group as $s) {
+                        $assignments[$date][$buildingId][$shiftTypeId][] = [
+                            'id' => $s->user->id,
+                            'name' => $s->user->name,
+                            'shift_role' => $s->user->shift_role,
+                            'shift_type_id' => $shiftTypeId,
+                        ];
+                    }
                 }
             }
         }
 
-        return response()->json(['message' => '夜勤シフト（仮）を保存しました']);
+        return $assignments;
     }
 }
