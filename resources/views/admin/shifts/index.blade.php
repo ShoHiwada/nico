@@ -6,60 +6,60 @@
 
 <div x-data="shiftTableDay(window.shiftTypes, window.initialShifts, window.users)">
 
-<!-- フィルターUI -->
-<div class="p-4 border border-gray-300 rounded-xl mb-4">
-    <div class="flex flex-wrap items-end gap-4">
-        <div class="flex flex-col">
-            <label class="font-semibold">支店</label>
-            <select x-model="branch_id" class="border rounded p-1 w-40">
-                <option value="">全ての支店</option>
-                <template x-for="b in branches" :key="b.id">
-                    <option :value="b.id" x-text="b.name"></option>
-                </template>
-            </select>
-        </div>
+    <!-- フィルターUI -->
+    <div class="p-4 border border-gray-300 rounded-xl mb-4">
+        <div class="flex flex-wrap items-end gap-4">
+            <div class="flex flex-col">
+                <label class="font-semibold">支店</label>
+                <select x-model="branch_id" class="border rounded p-1 w-40">
+                    <option value="">全ての支店</option>
+                    <template x-for="b in branches" :key="b.id">
+                        <option :value="b.id" x-text="b.name"></option>
+                    </template>
+                </select>
+            </div>
 
-        <div class="flex flex-col">
-            <label class="font-semibold">部署</label>
-            <select x-model="department_id" class="border rounded p-1 w-40">
-                <option value="">全ての部署</option>
-                <template x-for="d in filteredDepartments" :key="d.id">
-                    <option :value="d.id" x-text="d.name"></option>
-                </template>
-            </select>
-        </div>
+            <div class="flex flex-col">
+                <label class="font-semibold">部署</label>
+                <select x-model="department_id" class="border rounded p-1 w-40">
+                    <option value="">全ての部署</option>
+                    <template x-for="d in filteredDepartments" :key="d.id">
+                        <option :value="d.id" x-text="d.name"></option>
+                    </template>
+                </select>
+            </div>
 
-        <div class="flex flex-col">
-            <label class="font-semibold">役職</label>
-            <select x-model="position_id" class="border rounded p-1 w-40">
-                <option value="">全ての役職</option>
-                <template x-for="p in positions" :key="p.id">
-                    <option :value="p.id" x-text="p.name"></option>
-                </template>
-            </select>
-        </div>
+            <div class="flex flex-col">
+                <label class="font-semibold">役職</label>
+                <select x-model="position_id" class="border rounded p-1 w-40">
+                    <option value="">全ての役職</option>
+                    <template x-for="p in positions" :key="p.id">
+                        <option :value="p.id" x-text="p.name"></option>
+                    </template>
+                </select>
+            </div>
 
-        <div class="flex flex-col">
-            <label class="font-semibold">勤務種別</label>
-            <select x-model="shift_role" class="border rounded p-1 w-40">
-                <option value="">全て</option>
-                <option value="day">日勤</option>
-                <option value="night">夜勤</option>
-                <option value="both">両方</option>
-            </select>
-        </div>
+            <div class="flex flex-col">
+                <label class="font-semibold">勤務種別</label>
+                <select x-model="shift_role" class="border rounded p-1 w-40">
+                    <option value="">全て</option>
+                    <option value="day">日勤</option>
+                    <option value="night">夜勤</option>
+                    <option value="both">両方</option>
+                </select>
+            </div>
 
-        <div class="flex flex-col">
-            <button @click="filterUsers" class="bg-blue-600 text-white px-4 py-2 rounded mt-5">
-                絞り込み
-            </button>
-        </div>
+            <div class="flex flex-col">
+                <button @click="filterUsers" class="bg-blue-600 text-white px-4 py-2 rounded mt-5">
+                    絞り込み
+                </button>
+            </div>
 
-        <div class="flex items-center h-full">
-            <p class="font-semibold">絞り込み結果: <span x-text="users.length"></span> 件</p>
+            <div class="flex items-center h-full">
+                <p class="font-semibold">絞り込み結果: <span x-text="users.length"></span> 件</p>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- フォーム全体 -->
     <form method="POST" action="{{ route('admin.shifts.store') }}">
@@ -70,6 +70,9 @@
                 <table class="table-auto border-collapse w-full text-xs">
                     <thead>
                         <tr>
+                            <th class="px-2 py-2 bg-gray-200 text-center">
+                                <input type="checkbox" @click="toggleAllUsers($event.target.checked)">
+                            </th>
                             <th class="sticky left-0 z-20 bg-gray-200 px-4 py-2">職員名</th>
                             @foreach ($days as $day)
                             @php
@@ -90,6 +93,9 @@
                     <tbody>
                         <template x-for="user in users" :key="user.id">
                             <tr>
+                                <td class="text-center bg-gray-50">
+                                    <input type="checkbox" :value="user.id" x-model="selectedUserIds">
+                                </td>
                                 <td class="sticky left-0 z-10 bg-gray-50 px-4 py-2 font-semibold text-base whitespace-nowrap"
                                     x-text="user.name"></td>
                                 @foreach ($days as $day)
@@ -127,6 +133,17 @@
         <template x-for="item in deletedDates" :key="item.date + '_' + item.user_id">
             <input type="hidden" name="deleted_dates[]" :value="JSON.stringify(item)">
         </template>
+
+        <!-- 希望シフト反映ボタン -->
+        <div class="mt-4 text-left">
+            <button
+                type="button"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                @click="reflectShiftRequests"
+                :disabled="selectedUserIds.length === 0">
+                希望シフトを反映（対象: <span x-text="selectedUserIds.length"></span> 名）
+            </button>
+        </div>
 
         <!-- 登録ボタン -->
         <div class="mt-4 text-right">

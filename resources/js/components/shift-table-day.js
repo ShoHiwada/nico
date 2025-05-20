@@ -23,6 +23,9 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}, initialU
         selectedDate: '',
         selectedTypes: [],
 
+        // 希望シフト管理
+        selectedUserIds: [],
+
         async init() {
             // 既存シフトを初期化
             for (const date in this.initialShiftData) {
@@ -133,6 +136,28 @@ export default function (typesFromBackend = [], shiftsFromBackend = {}, initialU
             if (!hasPrev && hasNext) return 'rounded-s-full';
             if (hasPrev && !hasNext) return 'rounded-e-full';
             return 'rounded-none';
-        }
+        },
+
+        // 希望シフト管理
+        toggleAllUsers(checked) {
+            this.selectedUserIds = checked ? this.users.map(u => u.id) : [];
+        },
+        
+        reflectShiftRequests() {
+            if (this.selectedUserIds.length === 0) {
+                alert("対象者が選択されていません。");
+                return;
+            }
+        
+            this.selectedUserIds.forEach(userId => {
+                const requests = this.getRequestsForUser(userId); // ←希望シフトの取得ロジック（要実装）
+                for (const [date, types] of Object.entries(requests)) {
+                    if (!this.shiftData[date]) this.shiftData[date] = {};
+                    this.shiftData[date][userId] = types;
+                }
+            });
+        
+            alert("希望シフトを反映しました。");
+        },
     };
 }
