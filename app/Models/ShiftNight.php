@@ -10,7 +10,7 @@ class ShiftNight extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'building_id', 'date', 'status'];
+    protected $fillable = ['user_id', 'building_id', 'date', 'status', 'shift_type_id'];
 
     public function user()
     {

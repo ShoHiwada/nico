@@ -25,28 +25,36 @@ export function calculateScore({
         return dateObj.toISOString().slice(0, 10);
     };
 
-    const isPrevAssigned = Object.values(assignments[getRelativeDate(date, -1)] || {}).some(users =>
-        users.some(u => u.id === userId)
-    );
-    const isNextAssigned = Object.values(assignments[getRelativeDate(date, 1)] || {}).some(users =>
-        users.some(u => u.id === userId)
-    );
-    const isTwoDaysAgoAssigned = Object.values(assignments[getRelativeDate(date, -2)] || {}).some(users =>
-        users.some(u => u.id === userId)
-    );
+    const isPrevAssigned = Object.values(assignments[getRelativeDate(date, -1)] || {})
+    .flatMap(group => Object.values(group))
+    .some(u => u.id === userId);
+
+const isNextAssigned = Object.values(assignments[getRelativeDate(date, 1)] || {})
+    .flatMap(group => Object.values(group))
+    .some(u => u.id === userId);
+
+const isTwoDaysAgoAssigned = Object.values(assignments[getRelativeDate(date, -2)] || {})
+    .flatMap(group => Object.values(group))
+    .some(u => u.id === userId);
+
 
     const assignedCount = Object.values(assignments || {}).reduce((sum, day) => {
-        return sum + Object.values(day).reduce((innerSum, users) =>
-            innerSum + users.filter(u => u.id === userId).length, 0
-        );
+        return sum + Object.values(day).reduce((innerSum, shiftGroups) =>
+            innerSum + Object.values(shiftGroups).flat().filter(u => u.id === userId).length
+        , 0);
     }, 0);
+    
 
     const candidateCountToday = users.filter(user =>
         (user.shift_role === 'night' || user.shift_role === 'both') &&
         shiftRequests?.[date]?.[user.id]
     ).length;
 
-    const isNightPreferred = shiftRequests?.[date]?.[userId]?.some(id => shiftTypeCategories[parseInt(id)] === 'night') ?? false;
+    const isNightPreferred = shiftRequests?.[date]?.[userId]?.some(id => {
+        const type = shiftTypeCategories?.[parseInt(id)];
+        return type?.category === 'night';
+    }) ?? false;
+    
     const priority = userFlags?.[userId];
 
     let score = 0;

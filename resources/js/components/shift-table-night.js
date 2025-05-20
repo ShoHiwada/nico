@@ -97,7 +97,16 @@ export default function () {
         },
 
         assignAutomatically() {
-            const isPreferred = (userId, date) => this.isNightShiftPreferred(userId, date);
+            const nightTypeIds = Object.values(this.shiftTypeCategories || {})
+                .filter(type => type.category === 'night')
+                .map(type => type.id);
+
+
+            const isPreferred = (userId, date) =>
+                nightTypeIds.some(typeId =>
+                    this.shiftRequests?.[date]?.[userId]?.includes(String(typeId))
+                );
+
             const isAlreadyAssigned = (userId, date) =>
                 Object.values(this.assignments?.[date] || {}).some(shiftGroups =>
                     Object.values(shiftGroups).flat().some(u => u.id === userId)
@@ -114,19 +123,43 @@ export default function () {
                             isPreferred(user.id, date) &&
                             !isAlreadyAssigned(user.id, date)
                         )
-                        .map(user => ({
-                            ...user,
-                            score: calculateScore({
-                                userId: user.id,
-                                date,
-                                users: this.users,
-                                shiftRequests: this.shiftRequests,
-                                assignments: this.assignments,
-                                shiftTypeCategories: this.shiftTypeCategories,
-                                userFlags: this.userFlags,
-                                scoreOptions: this.scoreOptions
-                            })
-                        }))
+
+                        .map(user => {
+                            let shiftRequestArray = this.shiftRequests?.[date]?.[user.id];
+
+                            if (typeof shiftRequestArray === 'string') {
+                                try {
+                                    shiftRequestArray = JSON.parse(shiftRequestArray);
+                                } catch (e) {
+                                    console.warn("❌ shiftRequestArrayのJSONパース失敗:", shiftRequestArray);
+                                    shiftRequestArray = [];
+                                }
+                            }
+
+                            shiftRequestArray = shiftRequestArray || [];
+
+                            const preferredTypeId = nightTypeIds.find(typeId =>
+                                shiftRequestArray.includes(String(typeId))
+                            );
+                            const finalTypeId = preferredTypeId ?? nightTypeIds[0];
+
+                            return {
+                                ...user,
+                                preferredTypeId: finalTypeId,
+                                score: calculateScore({
+                                    userId: user.id,
+                                    date,
+                                    users: Object.values(this.users),
+                                    typeId: finalTypeId,
+                                    shiftRequests: this.shiftRequests,
+                                    assignments: this.assignments,
+                                    shiftTypeCategories: this.shiftTypeCategories,
+                                    userFlags: this.userFlags,
+                                    scoreOptions: this.scoreOptions
+                                })
+                            };
+                        })
+
                         .sort((a, b) => b.score - a.score);
 
                     if (this.debugScoreLog) {
@@ -137,14 +170,19 @@ export default function () {
                         id: user.id,
                         name: user.name,
                         shift_role: user.shift_role,
-                        shift_type_id: 5 // ★仮に固定で夜勤(22-8)を割り当て
+                        shift_type_id: user.preferredTypeId
                     }));
 
                     const selections = {};
                     if (selected.length) {
                         const typeId = selected[0].shift_type_id;
-                        selections[String(typeId)] = selected;
+                        if (typeId) {
+                            selections[String(typeId)] = selected;
+                        } else {
+                            console.warn("❗ shift_type_idが未定義:", selected);
+                        }
                     }
+
 
                     if (!this.assignments[date]) this.assignments[date] = {};
                     this.assignments[date][bid] = selections;
