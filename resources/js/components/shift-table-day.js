@@ -71,16 +71,25 @@ export default function (currentMonthStr = '', daysArray = []) {
         },
 
         async filterUsers() {
+            const hasFilter =
+                this.branch_id || this.department_id || this.position_id || this.shift_role;
+        
+            if (!hasFilter) {
+                // 全件取得（初期状態に戻す）
+                await this.fetchUsers();
+                return;
+            }
+        
             const params = new URLSearchParams({
                 branch_id: this.branch_id,
                 department_id: this.department_id,
                 position_id: this.position_id,
                 shift_role: this.shift_role
             });
-
+        
             const res = await fetch(`/admin/api/users?${params}`);
             this.users = await res.json();
-        },
+        },        
 
         // 希望シフト反映
         async reflectShiftRequests() {

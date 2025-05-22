@@ -10,6 +10,7 @@
             <div class="flex flex-col">
                 <label class="font-semibold">支店</label>
                 <select x-model="branch_id" class="border rounded p-1 w-40">
+                <option value="">全て</option>
                     <template x-for="opt in branches" :key="opt.id">
                         <option :value="opt.id" x-text="opt.name"></option>
                     </template>
@@ -19,6 +20,7 @@
             <div class="flex flex-col">
                 <label class="font-semibold">部署</label>
                 <select x-model="department_id" class="border rounded p-1 w-40">
+                <option value="">全て</option>
                     <template x-for="opt in filteredDepartments" :key="opt.id">
                         <option :value="opt.id" x-text="opt.name"></option>
                     </template>
@@ -28,6 +30,7 @@
             <div class="flex flex-col">
                 <label class="font-semibold">役職</label>
                 <select x-model="position_id" class="border rounded p-1 w-40">
+                <option value="">全て</option>
                     <template x-for="opt in positions" :key="opt.id">
                         <option :value="opt.id" x-text="opt.name"></option>
                     </template>
@@ -37,8 +40,8 @@
             <div class="flex flex-col">
                 <label class="font-semibold">勤務種別</label>
                 <select x-model="shift_role" class="border rounded p-1 w-40">
+                <option value="">全て</option> 
                     <template x-for="opt in [
-            { id: '', name: '全て' },
             { id: 'day', name: '日勤' },
             { id: 'night', name: '夜勤' },
             { id: 'both', name: '両方' }
