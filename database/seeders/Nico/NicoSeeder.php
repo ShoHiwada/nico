@@ -15,6 +15,7 @@ class NicoSeeder extends Seeder
             NicoPositionSeeder::class,
             NicoShiftTypeSeeder::class,
             NicoUserSeeder::class,
+            NicoBuildingSeeder::class,
         ]);
     }
 }
