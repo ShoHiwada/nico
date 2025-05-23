@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('shift_type_id')->constrained()->onDelete('cascade');
-            $table->tinyInteger('weekday'); // 0 = 日曜, 6 = 土曜
             $table->date('start_date');
             $table->date('end_date')->nullable(); // NULLなら無期限
             $table->timestamps();
