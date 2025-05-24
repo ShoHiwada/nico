@@ -12,7 +12,6 @@ FROM php:8.2-cli
 
 WORKDIR /app
 
-# PHP拡張インストール
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -22,23 +21,20 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && docker-php-ext-install zip pdo pdo_sqlite bcmath
 
-# Composerのセットアップ
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# プロジェクトファイルコピー
 COPY . .
 
-# Viteビルド成果物をコピー
 COPY --from=vite-build /app/public/build public/build
 
-# SQLite DBファイルを作成（Render用）
-RUN touch /tmp/database.sqlite \
-    && chmod -R 775 /tmp/database.sqlite \
+# ✅ SQLite DBファイルを作成（Render用：/data に変更）
+RUN mkdir -p /data \
+    && touch /data/database.sqlite \
+    && chmod -R 775 /data \
     && chmod -R 775 storage bootstrap/cache
 
-# Laravel初期化
 RUN composer install --no-interaction --optimize-autoloader
 RUN php artisan config:clear
 
-# ポート指定してLaravelサーバ起動
-CMD php artisan serve --host=0.0.0.0 --port=10000
+# ✅ CMDにマイグレーション追加（起動時に毎回）
+CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
