@@ -12,10 +12,20 @@ use App\Http\Controllers\Admin\AdminShiftRequestController;
 use App\Http\Controllers\Staff\ShiftRequestNoteController;
 use App\Http\Controllers\Admin\NightShiftController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
 
 // トップページ
 Route::get('/', function () {
     return view('welcome');
+});
+
+// ログ確認
+Route::get('/debug-log', function () {
+    $log = File::exists(storage_path('logs/laravel.log'))
+        ? File::get(storage_path('logs/laravel.log'))
+        : 'ログファイルがありません';
+    
+    return response("<pre>$log</pre>", 200)->header('Content-Type', 'text/html');
 });
 
 // routes/web.php
