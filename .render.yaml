@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: nico-shift
+    env: docker
+    plan: free
+    branch: main
+    dockerfilePath: Dockerfile
+    buildCommand: ""
+    startCommand: php artisan serve --host=0.0.0.0 --port=10000
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        value: base64:buHFeWJR10Ay8g+MoW0qzSz9ZhjCu6VlAmUHA8X9UoU=
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /tmp/database.sqlite
