@@ -23,7 +23,11 @@ class ShiftRequestController extends Controller
         $note = ShiftRequestNote::where('user_id', Auth::id())->where('month', $selectedMonth)->first();
         $deadline = ShiftRequestDeadline::where('month', $selectedMonth)->first();
 
-        return view('staff.shift-request', compact('availableMonths', 'shiftTypes', 'note', 'selectedMonth', 'deadline'));
+        $isDeadlineOver = $deadline ? now()->gt($deadline->deadline_date) : false;
+        $formattedDate = $deadline ? \Carbon\Carbon::parse($deadline->deadline_date)->format('Y年n月j日') : null;
+        $formattedMonth = \Carbon\Carbon::parse($selectedMonth . '-01')->format('Y年n月');
+
+        return view('staff.shift-request', compact('availableMonths', 'shiftTypes', 'note', 'selectedMonth', 'isDeadlineOver', 'formattedDate', 'formattedMonth'));
     }
 
     public function store(Request $request)
