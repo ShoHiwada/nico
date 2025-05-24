@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libsqlite3-dev \
     pkg-config \
-    && docker-php-ext-install zip pdo pdo_sqlite
+    && docker-php-ext-install zip pdo pdo_sqlite bcmath
 
 # Composer インストール
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
