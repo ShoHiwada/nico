@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use BladeUI\Heroicons\HeroiconsServiceProvider;
 use BladeUI\Icons\Factory;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,11 +20,10 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot()
     {
-        // app(Factory::class)->add('heroicons-outline', [
-        //     'path' => resource_path('views/vendor/heroicons/outline'),
-        //     'prefix' => 'heroicons-outline',
-        // ]);
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
