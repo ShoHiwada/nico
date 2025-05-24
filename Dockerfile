@@ -1,11 +1,13 @@
 FROM php:8.2-cli
 
-# 必要なPHP拡張とツールをインストール
+# 必要なPHP拡張とツールをインストール（←ここ修正ポイント！）
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
     libzip-dev \
+    libsqlite3-dev \  # ←★追加した
+    pkg-config \
     && docker-php-ext-install zip pdo pdo_sqlite
 
 # Composer インストール
