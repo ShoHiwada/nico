@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libzip-dev \
-    libsqlite3-dev \  # ←★追加した
+    libsqlite3-dev \
     pkg-config \
     && docker-php-ext-install zip pdo pdo_sqlite
 
