@@ -97,7 +97,16 @@
                             </th>
                             <th class="sticky left-0 z-20 bg-gray-200 px-4 py-2">職員名</th>
                             <template x-for="day in days" :key="day">
-                                <th class="px-2 py-1 text-center bg-gray-100" x-text="day"></th>
+                                <th
+                                    class="px-2 py-1 text-center"
+                                    :class="{
+                                            'bg-red-100 text-red-600': getWeekday(day) === 0,
+                                            'bg-blue-100 text-blue-600': getWeekday(day) === 6,
+                                            'bg-gray-100': ![0,6].includes(getWeekday(day))
+                                        }">
+                                    <span x-text="day"></span><br>
+                                    <span class="text-[10px]" x-text="getWeekdayLabel(day)"></span>
+                                </th>
                             </template>
                         </tr>
                     </thead>

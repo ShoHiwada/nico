@@ -243,6 +243,15 @@ export default function (currentYear = '', currentMonthStr = '', daysArray = [])
             return d.toISOString().slice(0, 10);
         },
 
+        getWeekday(day) {
+            const date = new Date(`${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+            return date.getDay(); // 0〜6（日〜土）
+        },
+        getWeekdayLabel(day) {
+            const ja = ['日', '月', '火', '水', '木', '金', '土'];
+            return `(${ja[this.getWeekday(day)]})`;
+        },        
+
         isConsecutiveShift(date, userId) {
             return this.hasShift(this.prevDate(date), userId) || this.hasShift(this.nextDate(date), userId);
         },
