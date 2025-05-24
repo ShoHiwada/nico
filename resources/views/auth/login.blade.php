@@ -51,7 +51,6 @@
             </x-primary-button>
         </div>
     </form>
-    </form>
 
     {{-- テストユーザーボタン群 --}}
     <div class="mt-6 space-y-2">
@@ -75,5 +74,4 @@
     </div>
 </div>
 
-</form>
 </x-guest-layout>
