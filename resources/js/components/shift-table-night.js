@@ -27,10 +27,24 @@ export default function () {
         labelMap: scoreOptionLabels,
 
         // シフト種別ごとの色
-        shiftTypeColors: {
-            4: 'bg-blue-500',
-            5: 'bg-pink-500',
+        shiftTypeColors: {},
+        init() {
+            const baseColors = [
+                'bg-blue-500', 'bg-pink-500', 'bg-green-500',
+                'bg-yellow-500', 'bg-purple-500', 'bg-rose-500',
+                'bg-emerald-500', 'bg-sky-500', 'bg-indigo-500'
+            ];
+        
+            Object.entries(this.shiftTypeCategories).forEach(([id, type], index) => {
+                const color = baseColors[index % baseColors.length];
+                console.log(`🖍 shiftType ${id} (${type.name}) → ${color}`);
+                this.shiftTypeColors[id] = color;
+            });
+        
+            console.log("✅ shiftTypeColors:", this.shiftTypeColors);
         },
+        
+        
 
         debugScoreLog: false,
 

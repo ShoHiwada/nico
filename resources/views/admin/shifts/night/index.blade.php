@@ -22,7 +22,7 @@
 </div>
 
 <!-- Alpineコンポーネント -->
-<div x-data="shiftTable()" class="text-xs">
+<div x-data="shiftTable()" x-init="init()" class="text-xs">
 
     <!-- テーブルのみ横スクロール -->
     <div class="overflow-x-auto">
