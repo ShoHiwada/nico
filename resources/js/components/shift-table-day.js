@@ -1,6 +1,7 @@
-export default function (currentMonthStr = '', daysArray = []) {
+export default function (currentYear = '', currentMonthStr = '', daysArray = []){
     return {
         // --- 基本情報
+        currentYear,
         currentMonth: currentMonthStr,
         days: daysArray,
 
@@ -137,8 +138,11 @@ export default function (currentMonthStr = '', daysArray = []) {
         },            
 
         formatDate(day) {
-            return `${this.currentMonth}-${String(day).padStart(2, '0')}`;
-        },
+            const year = window.currentYear;
+            const month = String(this.currentMonth).padStart(2, '0');
+            const date = String(day).padStart(2, '0');
+            return `${year}-${month}-${date}`; // "2025-05-14"
+        },        
 
         // 固定シフト反映
         async reflectFixedShifts() {

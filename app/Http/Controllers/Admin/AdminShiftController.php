@@ -8,6 +8,7 @@ use App\Models\Shift;
 use App\Models\User;
 use App\Models\ShiftRequest;
 use App\Models\ShiftType;
+use Carbon\CarbonPeriod;
 use Carbon\Carbon;
 
 class AdminShiftController extends Controller
@@ -17,15 +18,21 @@ class AdminShiftController extends Controller
         $users = User::where('is_admin', false)->get();
         $shiftTypes = ShiftType::all();
 
-        $month = request('month', now()->format('Y-m'));
-        $daysInMonth = Carbon::parse($month)->daysInMonth;
+        $year = (int) request('year', now()->year);
+        $month = (int) request('month', now()->month);
+        
+        $ym = sprintf('%04d-%02d', $year, $month); // ← "2025-04"
+        
+        $carbon = Carbon::parse($ym);        
+        
+        $daysInMonth = $carbon->daysInMonth;
         $days = range(1, $daysInMonth);
-
+    
         $shifts = Shift::whereBetween('date', [
-            Carbon::parse($month)->startOfMonth(),
-            Carbon::parse($month)->endOfMonth()
-        ])
-            ->get();
+            $carbon->copy()->startOfMonth(),
+            $carbon->copy()->endOfMonth()
+        ])->get();
+        
 
         // JSで使いやすい形式に変換
         $initialShifts = [];
@@ -57,6 +64,7 @@ class AdminShiftController extends Controller
             'shiftTypes' => $shiftTypes,
             'days' => $days,
             'currentMonth' => $month,
+            'currentYear' => $year, 
             'initialShiftsJson' => json_encode($initialShifts),
             'ShiftsJson' => $shiftsJson->toJson(), 
         ]);
@@ -64,15 +72,42 @@ class AdminShiftController extends Controller
 
     public function create(Request $request)
     {
-        $year = $request->query('year', now()->year);
-        $month = str_pad($request->query('month', now()->month), 2, '0', STR_PAD_LEFT);
-        $ym = $year . '-' . $month;
-        $days = range(1, Carbon::parse($ym)->daysInMonth);
-        return view('admin.shifts.index', [
-            'users' => User::where('is_admin', false)->get(),
-            'shiftTypes' => ShiftType::all(),
-            'days' => $days,
-            'currentMonth' => $ym,
+        // 年月を取得（指定がなければ今月）
+        $year = (int) $request->input('year', now()->year);
+        $month = (int) $request->input('month', now()->month);
+    
+        // 開始日と終了日
+        $start = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+    
+        // 日付リストを整形
+        $dates = collect(CarbonPeriod::create($start, $end))->map(function ($d) {
+            return [
+                'date' => $d->toDateString(),
+                'dayOfWeek' => $d->dayOfWeek,
+            ];
+        });
+    
+        // ユーザー・施設関連・シフトタイプなど取得
+        $users = User::select('id', 'name', 'shift_role', 'building_id', 'department_id', 'position_id')
+            ->where('is_admin', false)
+            ->get();
+    
+        $buildings = \App\Models\Building::all();
+        $departments = \App\Models\Department::all();
+        $positions = \App\Models\Position::all();
+        $shiftTypes = \App\Models\ShiftType::all();
+    
+        return view('admin.shifts.index', compact(
+            'users',
+            'buildings',
+            'departments',
+            'positions',
+            'shiftTypes',
+            'dates'
+        ))->with([
+            'currentYear' => $year,
+            'currentMonth' => $month,
         ]);
     }
 
@@ -116,7 +151,10 @@ class AdminShiftController extends Controller
         }
 
 
-        return redirect()->route('admin.shifts.index')->with('success', 'シフトを保存しました');
+        return redirect()->route('admin.shifts.index', [
+            'year' => $request->input('year', now()->year),
+            'month' => $request->input('month', now()->month),
+        ])->with('success', 'シフトを保存しました');
     }
 
 
@@ -245,9 +283,16 @@ class AdminShiftController extends Controller
         $query = Shift::query();
     
         if ($request->filled('month')) {
+            $year = (int) $request->input('year', now()->year);
+            $month = (int) $request->input('month', now()->month);
+            $ym = sprintf('%04d-%02d', $year, $month);
+    
+            $start = Carbon::parse($ym)->startOfMonth();
+            $end = Carbon::parse($ym)->endOfMonth();
+    
             $query->whereBetween('date', [
-                Carbon::parse($request->month)->startOfMonth()->toDateString(),
-                Carbon::parse($request->month)->endOfMonth()->toDateString(),
+                $start->toDateString(),
+                $end->toDateString(),
             ]);
         }
     

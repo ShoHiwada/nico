@@ -3,14 +3,32 @@
 @section('content')
 <h2 class="text-2xl font-bold mb-4">シフト作成（表形式）</h2>
 
-<div x-data="shiftTableDay(window.currentMonth, window.days)">
+<div class="flex items-center justify-center gap-4 mb-2 text-xs">
+    <form method="GET" action="{{ route('admin.shifts.index') }}" class="flex items-center gap-1">
+        <input type="hidden" name="year" value="{{ $currentYear }}">
+        <input type="hidden" name="month" value="{{ $currentMonth - 1 }}">
+        <button type="submit" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">←</button>
+    </form>
+
+    <span class="text-sm font-semibold">
+        {{ $currentYear }}年{{ $currentMonth }}月
+    </span>
+
+    <form method="GET" action="{{ route('admin.shifts.index') }}" class="flex items-center gap-1">
+        <input type="hidden" name="year" value="{{ $currentYear }}">
+        <input type="hidden" name="month" value="{{ $currentMonth + 1 }}">
+        <button type="submit" class="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">→</button>
+    </form>
+</div>
+
+<div x-data="shiftTableDay(window.currentYear, window.currentMonth, window.days)">
     <!-- フィルターUI -->
     <div class="p-4 border border-gray-300 rounded-xl mb-4">
         <div class="flex flex-wrap items-end gap-4">
             <div class="flex flex-col">
                 <label class="font-semibold">支店</label>
                 <select x-model="branch_id" class="border rounded p-1 w-40">
-                <option value="">全て</option>
+                    <option value="">全て</option>
                     <template x-for="opt in branches" :key="opt.id">
                         <option :value="opt.id" x-text="opt.name"></option>
                     </template>
@@ -20,7 +38,7 @@
             <div class="flex flex-col">
                 <label class="font-semibold">部署</label>
                 <select x-model="department_id" class="border rounded p-1 w-40">
-                <option value="">全て</option>
+                    <option value="">全て</option>
                     <template x-for="opt in filteredDepartments" :key="opt.id">
                         <option :value="opt.id" x-text="opt.name"></option>
                     </template>
@@ -30,7 +48,7 @@
             <div class="flex flex-col">
                 <label class="font-semibold">役職</label>
                 <select x-model="position_id" class="border rounded p-1 w-40">
-                <option value="">全て</option>
+                    <option value="">全て</option>
                     <template x-for="opt in positions" :key="opt.id">
                         <option :value="opt.id" x-text="opt.name"></option>
                     </template>
@@ -40,7 +58,7 @@
             <div class="flex flex-col">
                 <label class="font-semibold">勤務種別</label>
                 <select x-model="shift_role" class="border rounded p-1 w-40">
-                <option value="">全て</option> 
+                    <option value="">全て</option>
                     <template x-for="opt in [
             { id: 'day', name: '日勤' },
             { id: 'night', name: '夜勤' },
@@ -67,6 +85,8 @@
     <!-- フォーム全体 -->
     <form method="POST" action="{{ route('admin.shifts.store') }}">
         @csrf
+        <input type="hidden" name="year" :value="currentYear">
+        <input type="hidden" name="month" :value="currentMonth">
         <div class="overflow-x-auto relative">
             <div class="max-w-[1024px] mx-auto">
                 <table class="table-auto border-collapse w-full text-xs">
@@ -167,7 +187,8 @@
 
 @push('scripts')
 <script>
-    window.currentMonth = '{{ $currentMonth }}';
+    window.currentMonth = @json($currentMonth);
+    window.currentYear = @json($currentYear);
     window.days = @json($days);
 </script>
 @endpush
