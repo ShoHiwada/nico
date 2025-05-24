@@ -8,6 +8,8 @@
 <!-- シフト -->
 <x-nav-heading title="📅 シフト" />
 @if(auth()->user()->is_admin)
+    <x-nav-item icon="📅" label="シフト表" :href="route('shifts.index')" :active="request()->routeIs('shifts.index')" indent />
+    <x-nav-item icon="📝" label="シフト希望申請" :href="route('staff.shift-request')" :active="request()->routeIs('staff.shift-request')" indent />
     <x-nav-item icon="🛠" label="シフト作成" :href="route('admin.shifts.index')" :active="request()->routeIs('admin.shifts.index')" indent />
     <x-nav-item icon="🌙" label="夜勤シフト一覧" :href="route('admin.shifts.night.index')" :active="request()->routeIs('admin.shifts.night.index')" indent />
     <x-nav-item icon="📝" label="シフト希望一覧" :href="route('admin.shift-requests')" :active="request()->routeIs('admin.shift-requests')" indent />
