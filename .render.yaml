@@ -13,7 +13,7 @@ services:
       - key: APP_KEY
         value: base64:buHFeWJR10Ay8g+MoW0qzSz9ZhjCu6VlAmUHA8X9UoU=
       - key: APP_DEBUG
-        value: false
+        value: ture
       - key: DB_CONNECTION
         value: sqlite
       - key: DB_DATABASE
