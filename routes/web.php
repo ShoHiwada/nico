@@ -18,6 +18,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// routes/web.php
+Route::get('/test', function () {
+    return 'Laravel is alive';
+});
+
 // 一般ユーザー向けダッシュボード
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
     return view('dashboard');
