@@ -1,6 +1,20 @@
+# --- Node.jsとPHP両方使う構成 ---
+
+# Stage 1: Node.js でViteビルド
+FROM node:20-bullseye as vite-build
+
+WORKDIR /app
+COPY . .
+
+RUN npm ci
+RUN npm run build
+
+# Stage 2: PHP環境構築
 FROM php:8.2-cli
 
-# PHP拡張・ツールインストール
+WORKDIR /app
+
+# 必要なPHP拡張をインストール
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -10,23 +24,22 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && docker-php-ext-install zip pdo pdo_sqlite bcmath
 
-# Composer
+# Composerを使えるようにする
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 作業ディレクトリ
-WORKDIR /app
-
-# プロジェクトコピー
+# Laravelコード一式をコピー
 COPY . .
 
-# SQLite DBファイル作成 & パーミッション修正
-RUN touch /tmp/database.sqlite \
- && chmod -R 775 storage bootstrap/cache
+# Viteでビルドした成果物をコピー（public/buildなど）
+COPY --from=vite-build /app/public/build public/build
 
-# Laravel依存インストール
+# Laravel初期化
 RUN composer install --no-interaction --optimize-autoloader
+RUN php artisan config:clear
 
-# アプリ起動時にマイグレーション＋サーバ起動（←これが超重要）
-CMD php artisan config:clear && \
-    php artisan migrate --force && \
-    php artisan serve --host=0.0.0.0 --port=10000
+# SQLite DBファイルを作成
+RUN touch /tmp/database.sqlite \
+    && chmod -R 775 storage bootstrap/cache
+
+# ポートを指定して起動
+CMD php artisan serve --host=0.0.0.0 --port=10000
