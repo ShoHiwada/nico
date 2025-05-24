@@ -1,6 +1,6 @@
 FROM php:8.2-cli
 
-# 必要なPHP拡張とツールをインストール（←ここ修正ポイント！）
+# 必要なPHP拡張とツールをインストール
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -13,14 +13,20 @@ RUN apt-get update && apt-get install -y \
 # Composer インストール
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 作業ディレクトリ
+# 作業ディレクトリを作成
 WORKDIR /app
 
-# プロジェクトコピー
+# プロジェクトをコンテナにコピー
 COPY . .
 
-# 依存関係インストール
-RUN composer install --no-interaction --optimize-autoloader
+# DBファイルの作成と権限設定
+RUN touch /tmp/database.sqlite \
+ && chmod -R 775 storage bootstrap/cache
 
-# ポート指定して Laravel 起動
+# Laravel 初期化
+RUN composer install --no-interaction --optimize-autoloader \
+ && php artisan config:clear \
+ && php artisan migrate --force
+
+# アプリ起動
 CMD php artisan serve --host=0.0.0.0 --port=10000
