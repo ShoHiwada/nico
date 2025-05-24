@@ -1,6 +1,6 @@
 FROM php:8.2-cli
 
-# 必要なPHP拡張とツールをインストール
+# PHP拡張・ツールインストール
 RUN apt-get update && apt-get install -y \
     unzip \
     git \
@@ -10,23 +10,23 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     && docker-php-ext-install zip pdo pdo_sqlite bcmath
 
-# Composer インストール
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 作業ディレクトリを作成
+# 作業ディレクトリ
 WORKDIR /app
 
-# プロジェクトをコンテナにコピー
+# プロジェクトコピー
 COPY . .
 
-# DBファイルの作成と権限設定
+# SQLite DBファイル作成 & パーミッション修正
 RUN touch /tmp/database.sqlite \
  && chmod -R 775 storage bootstrap/cache
 
-# Laravel 初期化
-RUN composer install --no-interaction --optimize-autoloader \
- && php artisan config:clear \
- && php artisan migrate --force
+# Laravel依存インストール
+RUN composer install --no-interaction --optimize-autoloader
 
-# アプリ起動
-CMD php artisan serve --host=0.0.0.0 --port=10000
+# アプリ起動時にマイグレーション＋サーバ起動（←これが超重要）
+CMD php artisan config:clear && \
+    php artisan migrate --force && \
+    php artisan serve --host=0.0.0.0 --port=10000
