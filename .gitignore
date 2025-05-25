@@ -1,21 +1,36 @@
+# Laravel cache, storage
 /.phpunit.cache
+/storage/*.key
+/storage/pail
+/vendor
+
+# Node/Vite
 /node_modules
 /public/build
 /public/hot
 /public/storage
-/storage/*.key
-/storage/pail
-/vendor
+
+# Environment
 .env
-.env.backup
-.env.production
+.env.*
+!.env.example
+
+# PHP tools
 .phpactor.json
 .phpunit.result.cache
+
+# Laravel Homestead
 Homestead.json
 Homestead.yaml
+
+# Debug logs
 npm-debug.log
 yarn-error.log
+
+# Composer auth
 /auth.json
+
+# IDE/Editor settings
 /.fleet
 /.idea
 /.nova
