@@ -6,8 +6,33 @@
 </div>
 @endsection
 
-@push('style')
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/main.min.css" rel="stylesheet" />
+@push('styles')
+<style>
+    @media (max-width: 640px) {
+        h2.fc-toolbar-title {
+            font-size: 0.875rem !important;
+        }
+
+        .fc .fc-toolbar {
+            flex-wrap: wrap !important;
+            gap: 0.5rem !important;
+            justify-content: center;
+        }
+
+        .fc .fc-button {
+            padding: 0.2rem 0.5rem !important;
+            font-size: 0.75rem !important;
+            min-width: 2.5rem;
+        }
+
+        .fc-event-title {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            font-size: 0.75rem !important;
+        }
+    }
+</style>
 @endpush
 
 @push('scripts')

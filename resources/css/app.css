@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "@fullcalendar/core/main.min.css";
+@import "@fullcalendar/daygrid/main.min.css";
+
 [x-cloak] {
     display: none !important;
   }
