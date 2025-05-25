@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<h2 class="text-2xl font-bold mb-4">シフト作成（表形式）</h2>
+<h2 class="text-2xl font-bold mb-4 text-center">シフト作成（表形式）</h2>
 
 <div class="flex items-center justify-center gap-4 mb-2 text-xs">
     <form method="GET" action="{{ route('admin.shifts.index') }}" class="flex items-center gap-1">
@@ -22,65 +22,57 @@
 </div>
 
 <div x-data="shiftTableDay(window.currentYear, window.currentMonth, window.days)">
-    <!-- フィルターUI -->
-    <div class="p-4 border border-gray-300 rounded-xl mb-4">
-        <div class="flex flex-wrap items-end gap-4">
-            <div class="flex flex-col">
-                <label class="font-semibold">支店</label>
-                <select x-model="branch_id" class="border rounded p-1 w-40">
-                    <option value="">全て</option>
-                    <template x-for="opt in branches" :key="opt.id">
-                        <option :value="opt.id" x-text="opt.name"></option>
-                    </template>
-                </select>
-            </div>
+<!-- フィルターUI -->
+<div class="p-4 border border-gray-300 rounded-xl mb-4 max-w-6xl mx-auto">
+    <div class="flex flex-wrap justify-between items-end gap-4">
 
-            <div class="flex flex-col">
-                <label class="font-semibold">部署</label>
-                <select x-model="department_id" class="border rounded p-1 w-40">
-                    <option value="">全て</option>
-                    <template x-for="opt in filteredDepartments" :key="opt.id">
-                        <option :value="opt.id" x-text="opt.name"></option>
-                    </template>
-                </select>
+        <!-- 項目ブロック -->
+        @foreach ([
+            ['label' => '支店', 'model' => 'branch_id', 'options' => 'branches'],
+            ['label' => '部署', 'model' => 'department_id', 'options' => 'filteredDepartments'],
+            ['label' => '役職', 'model' => 'position_id', 'options' => 'positions'],
+            ['label' => '勤務種別', 'model' => 'shift_role', 'options' => null],
+        ] as $filter)
+            <div class="w-full md:w-64">
+                <div class="flex items-center gap-2 w-full">
+                    <label class="font-semibold w-20 shrink-0 text-left">{{ $filter['label'] }}</label>
+                    <select
+                        x-model="{{ $filter['model'] }}"
+                        class="border rounded p-2 w-full">
+                        <option value="">全て</option>
+                        @if ($filter['options'])
+                            <template x-for="opt in {{ $filter['options'] }}" :key="opt.id">
+                                <option :value="opt.id" x-text="opt.name"></option>
+                            </template>
+                        @else
+                            <template x-for="opt in [
+                                { id: 'day', name: '日勤' },
+                                { id: 'night', name: '夜勤' },
+                                { id: 'both', name: '両方' }
+                            ]" :key="opt.id">
+                                <option :value="opt.id" x-text="opt.name"></option>
+                            </template>
+                        @endif
+                    </select>
+                </div>
             </div>
+        @endforeach
 
-            <div class="flex flex-col">
-                <label class="font-semibold">役職</label>
-                <select x-model="position_id" class="border rounded p-1 w-40">
-                    <option value="">全て</option>
-                    <template x-for="opt in positions" :key="opt.id">
-                        <option :value="opt.id" x-text="opt.name"></option>
-                    </template>
-                </select>
-            </div>
-
-            <div class="flex flex-col">
-                <label class="font-semibold">勤務種別</label>
-                <select x-model="shift_role" class="border rounded p-1 w-40">
-                    <option value="">全て</option>
-                    <template x-for="opt in [
-            { id: 'day', name: '日勤' },
-            { id: 'night', name: '夜勤' },
-            { id: 'both', name: '両方' }
-        ]" :key="opt.id">
-                        <option :value="opt.id" x-text="opt.name"></option>
-                    </template>
-                </select>
-            </div>
-
-
-            <div class="flex flex-col">
-                <button @click="filterUsers" class="bg-blue-600 text-white px-4 py-2 rounded mt-5">
-                    絞り込み
-                </button>
-            </div>
-
-            <div class="flex items-center h-full">
-                <p class="text-xs text-gray-600">絞り込み結果: <span x-text="users.length"></span> 件</p>
-            </div>
+        <!-- ボタンと件数 -->
+        <div class="w-full flex flex-col items-center md:items-center gap-2">
+            <button @click="filterUsers"
+                class="bg-blue-600 text-white px-4 py-2 rounded w-full md:w-auto">
+                絞り込み
+            </button>
+            <p class="text-xs text-gray-600">
+                絞り込み結果: <span x-text="users.length"></span> 件
+            </p>
         </div>
+
     </div>
+</div>
+
+
 
     <!-- フォーム全体 -->
     <form method="POST" action="{{ route('admin.shifts.store') }}">
@@ -154,23 +146,35 @@
             <input type="hidden" name="deleted_dates[]" :value="JSON.stringify(item)">
         </template>
 
-        <div class="mt-4 flex justify-between items-center">
-            <div class="space-x-2">
-                <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                    @click="reflectShiftRequests" :disabled="selectedUserIds.length === 0">
-                    希望シフトを反映（対象: <span x-text="selectedUserIds.length"></span> 名）
-                </button>
+        <div class="mt-4 flex flex-col md:flex-row md:justify-between md:items-center gap-2">
+    <div class="flex flex-col w-full md:flex-row md:space-x-2 md:w-auto">
+        <button
+            type="button"
+            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 w-full md:w-auto"
+            @click="reflectShiftRequests"
+            :disabled="selectedUserIds.length === 0"
+        >
+            希望シフトを反映（対象: <span x-text="selectedUserIds.length"></span> 名）
+        </button>
 
-                <button type="button" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
-                    @click="reflectFixedShifts" :disabled="selectedUserIds.length === 0">
-                    固定シフトを反映（対象: <span x-text="selectedUserIds.length"></span> 名）
-                </button>
-            </div>
+        <button
+            type="button"
+            class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50 w-full md:w-auto mt-2 md:mt-0"
+            @click="reflectFixedShifts"
+            :disabled="selectedUserIds.length === 0"
+        >
+            固定シフトを反映（対象: <span x-text="selectedUserIds.length"></span> 名）
+        </button>
+    </div>
 
-            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                登録する
-            </button>
-        </div>
+    <button
+        type="submit"
+        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full md:w-auto mt-2 md:mt-0"
+    >
+        登録する
+    </button>
+</div>
+
     </form>
 
     <!-- モーダル -->

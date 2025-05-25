@@ -25,20 +25,20 @@
         @include('layouts.navigation')
 
         {{-- サイドバー＋メインを横並び --}}
-        <div class="flex min-h-screen">
+        <div class="md:flex min-h-screen">
             <!-- 左サイドバー（PC用） -->
             <aside x-data="{ expanded: true }"
-                    :class="expanded ? 'w-64' : 'w-16'"
-                    class="hidden md:flex flex-col bg-white dark:bg-gray-900 transition-all duration-300">
+                :class="expanded ? 'w-64' : 'w-16'"
+                class="hidden md:flex flex-col bg-white dark:bg-gray-900 transition-all duration-300">
 
-                    <!-- トグルボタン or ロゴ -->
-                    <div class="h-16 flex items-center justify-center border-b">
-                        <button @click="expanded = !expanded" class="focus:outline-none">
-                            <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                    </div>
+                <!-- トグルボタン or ロゴ -->
+                <div class="h-16 flex items-center justify-center border-b">
+                    <button @click="expanded = !expanded" class="focus:outline-none">
+                        <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
                 <nav class="px-4 py-6 space-y-1">
                     @include('layouts._nav-items')
                 </nav>
@@ -56,8 +56,8 @@
                 @endisset
 
                 <!-- Page Content -->
-                <main class="flex-1">
-                    <div class="max-w-5xl mx-auto px-4 py-6">
+                <main class="flex-1 w-full max-w-full overflow-x-hidden">
+                    <div class="w-full overflow-x-auto px-4 py-6">
                         @yield('content')
                     </div>
                 </main>
