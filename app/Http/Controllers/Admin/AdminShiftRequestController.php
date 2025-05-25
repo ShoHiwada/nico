@@ -13,13 +13,19 @@ use Carbon\Carbon;
 
 class AdminShiftRequestController extends Controller
 {
-    
+
     public function index(Request $request)
     {
         $selectedMonth = $request->input('month') ?? now()->format('Y-m');
 
-        $availableMonths = ShiftRequest::selectRaw('DISTINCT DATE_FORMAT(date, "%Y-%m") as month')
-            ->pluck('month');
+        // $availableMonths = ShiftRequest::selectRaw('DISTINCT DATE_FORMAT(date, "%Y-%m") as month')
+        //     ->pluck('month');
+
+        $availableMonths = ShiftRequest::pluck('date') // sqlite用処理
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m'))
+            ->unique()
+            ->sort()
+            ->values();
 
         $users = User::all();
         $shiftTypes = ShiftType::all()->keyBy('id');
@@ -56,15 +62,15 @@ class AdminShiftRequestController extends Controller
     public function apiIndex(Request $request)
     {
         $query = ShiftRequest::query();
-    
+
         if ($request->filled('month')) {
             $query->where('month', $request->month);
         }
-    
+
         if ($request->filled('user_ids')) {
             $query->whereIn('user_id', $request->user_ids);
         }
-    
+
         return $query->get(['user_id', 'date', 'week_patterns'])->map(function ($r) {
             return [
                 'user_id' => $r->user_id,
@@ -72,6 +78,5 @@ class AdminShiftRequestController extends Controller
                 'week_patterns' => $r->week_patterns ?? [],
             ];
         });
-    }    
-
+    }
 }
