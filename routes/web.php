@@ -112,4 +112,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('shift-request-notes/{month}', [ShiftRequestNoteController::class, 'update'])->name('shift_request_notes.update');
 });
 
+// routes/spa.php
+Route::get('/spa-test', fn () => view('spa'))->name('spa.test');
+
+// Vueのルーターが `/spa/*` を制御する場合
+Route::get('/spa/{any}', fn () => view('spa'))->where('any', '.*');
+
 require __DIR__ . '/auth.php';
