@@ -2,6 +2,7 @@
 /.phpunit.cache
 /storage/*.key
 /storage/pail
+/storage/logs/*
 /vendor
 
 # Node/Vite

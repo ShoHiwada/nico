@@ -6,9 +6,9 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
         hmr: {
-          host: process.env.VITE_DEV_SERVER_HOST || 'localhost'
+            host: 'localhost'
         }
-      },      
+    },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],

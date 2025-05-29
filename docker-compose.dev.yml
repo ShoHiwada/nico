@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "10000:10000"
+    volumes:
+      - .:/app
+    working_dir: /app
+    depends_on:
+      - db
+    command: php artisan serve --host=0.0.0.0 --port=10000
+
+  vite:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev"
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: nico_shift_db
+      MYSQL_USER: nico
+      MYSQL_PASSWORD: niconico25
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3308:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
